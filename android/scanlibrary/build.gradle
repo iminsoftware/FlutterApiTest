@@ -1,0 +1,75 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion '30.0.3'
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true  //不混淆
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    def SDK_BASENAME = "iminScan";//打包后名字
+    def zipFile = file('build/intermediates/aar_main_jar/release/classes.jar')
+    def sdkDestinationPath = "build/libs/";//保存目录
+
+    task makeJar(type: Jar) {//生成jar
+        delete 'build/libs/iminScan.jar'
+        from zipTree(zipFile)
+        from fileTree(dir: 'src/main/res/')
+//        from(project.zipTree('libs/zxing_core-3.5.0.jar'))
+//        from(project.zipTree('libs/glide-3.7.0.jar'))
+//        from(project.zipTree('libs/xutils-3.3.4.jar'))
+        archiveBaseName = SDK_BASENAME /*+ SDK_VERSION*/
+
+        destinationDirectory = file(sdkDestinationPath)//目的地
+    }
+
+    makeJar.dependsOn(build)
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.2.0'
+//    api files('libs\\zxing_core-3.5.0.jar')
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    def camerax_version = "1.2.0-alpha02"
+    // CameraX 核心库使用 camera2 实现
+//    api "android.camera:camera-camera:${camerax_version}"
+    // 可以使用CameraView
+    api "androidx.camera:camera-view:${camerax_version}"
+    // 可以使用供应商扩展
+    api "androidx.camera:camera-extensions:${camerax_version}"
+    //camerax的生命周期库
+    api "androidx.camera:camera-lifecycle:${camerax_version}"
+//    api("com.google.zxing:core:3.5.0")
+}

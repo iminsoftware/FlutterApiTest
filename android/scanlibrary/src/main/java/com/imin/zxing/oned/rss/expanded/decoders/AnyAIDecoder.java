@@ -1,0 +1,40 @@
+/*
+ * Copyright (C) 2010 ZXing authors
+ *
+
+ */
+
+/*
+ * These authors would like to acknowledge the Spanish Ministry of Industry,
+ * Tourism and Trade, for the support in the project TSI020301-2008-2
+ * "PIRAmIDE: Personalizable Interactions with Resources on AmI-enabled
+ * Mobile Dynamic Environments", led by Treelogic
+ * ( http://www.treelogic.com/ ):
+ *
+ *   http://www.piramidepse.com/
+ */
+
+package com.imin.zxing.oned.rss.expanded.decoders;
+
+import com.imin.zxing.FormatException;
+import com.imin.zxing.NotFoundException;
+import com.imin.zxing.common.BitArray;
+
+/**
+ * @author Pablo Orduña, University of Deusto (pablo.orduna@deusto.es)
+ * @author Eduardo Castillejo, University of Deusto (eduardo.castillejo@deusto.es)
+ */
+final class AnyAIDecoder extends AbstractExpandedDecoder {
+
+  private static final int HEADER_SIZE = 2 + 1 + 2;
+
+  AnyAIDecoder(BitArray information) {
+    super(information);
+  }
+
+  @Override
+  public String parseInformation() throws NotFoundException, FormatException {
+    StringBuilder buf = new StringBuilder();
+    return this.getGeneralDecoder().decodeAllCodes(buf, HEADER_SIZE);
+  }
+}
