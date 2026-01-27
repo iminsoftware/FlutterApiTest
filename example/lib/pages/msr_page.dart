@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+import '../l10n/app_localizations.dart';
 
 /// MSR (Magnetic Stripe Reader) Test Page
 ///
@@ -52,9 +53,11 @@ class _MsrPageState extends State<MsrPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MSR Test'),
+        title: Text(l10n.msrTest),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -70,9 +73,9 @@ class _MsrPageState extends State<MsrPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'MSR Status',
-                            style: TextStyle(
+                          Text(
+                            l10n.msrStatus,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -86,7 +89,9 @@ class _MsrPageState extends State<MsrPage> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                _isAvailable ? 'Available' : 'Not Available',
+                                _isAvailable
+                                    ? l10n.msrAvailable
+                                    : l10n.msrNotAvailable,
                                 style: TextStyle(
                                   color:
                                       _isAvailable ? Colors.green : Colors.red,
@@ -108,14 +113,15 @@ class _MsrPageState extends State<MsrPage> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Row(
                             children: [
-                              Icon(Icons.info_outline, color: Colors.blue),
-                              SizedBox(width: 8),
+                              const Icon(Icons.info_outline,
+                                  color: Colors.blue),
+                              const SizedBox(width: 8),
                               Text(
-                                'How to Use',
-                                style: TextStyle(
+                                l10n.howToUse,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue,
@@ -123,13 +129,10 @@ class _MsrPageState extends State<MsrPage> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           Text(
-                            '1. Tap the input field below\n'
-                            '2. Swipe a magnetic stripe card\n'
-                            '3. Card data will appear automatically\n'
-                            '4. MSR device works as keyboard input',
-                            style: TextStyle(fontSize: 14),
+                            l10n.msrInstructions,
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ],
                       ),
@@ -138,9 +141,9 @@ class _MsrPageState extends State<MsrPage> {
                   const SizedBox(height: 24),
 
                   // Input Field
-                  const Text(
-                    'Swipe Card Here:',
-                    style: TextStyle(
+                  Text(
+                    l10n.swipeCardHere,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -149,7 +152,7 @@ class _MsrPageState extends State<MsrPage> {
                   TextField(
                     controller: _msrController,
                     decoration: InputDecoration(
-                      hintText: 'Card data will appear here automatically',
+                      hintText: l10n.cardDataPlaceholder,
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.credit_card),
                       suffixIcon: IconButton(
@@ -166,7 +169,7 @@ class _MsrPageState extends State<MsrPage> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                                'Card data received: ${value.length} characters'),
+                                '${l10n.cardDataReceived}: ${value.length} ${l10n.characters}'),
                             backgroundColor: Colors.green,
                           ),
                         );
@@ -179,7 +182,7 @@ class _MsrPageState extends State<MsrPage> {
                   ElevatedButton.icon(
                     onPressed: _clearInput,
                     icon: const Icon(Icons.clear_all),
-                    label: const Text('Clear Input'),
+                    label: Text(l10n.clearInput),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.all(16),
                     ),
@@ -193,21 +196,18 @@ class _MsrPageState extends State<MsrPage> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
-                            'Technical Notes',
-                            style: TextStyle(
+                            l10n.technicalNotes,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Text(
-                            '• MSR devices work as keyboard input devices\n'
-                            '• No special API calls needed to read data\n'
-                            '• Data format depends on card and device\n'
-                            '• Supported devices: Crane 1, Swan 2, M2-Pro',
-                            style: TextStyle(fontSize: 13),
+                            l10n.msrTechnicalNotes,
+                            style: const TextStyle(fontSize: 13),
                           ),
                         ],
                       ),

@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 ///
 /// Supported devices: Crane 1, M2-Pro
 class IminLight {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
 
   /// Connect to the light device
   ///

@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   imin_hardware_plugin:
     path: ../
   cupertino_icons: ^1.0.2

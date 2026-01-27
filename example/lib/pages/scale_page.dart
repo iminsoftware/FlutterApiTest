@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imin_hardware_plugin/src/scale/scale_api.dart';
+import '../l10n/app_localizations.dart';
 import 'dart:async';
 
 class ScalePage extends StatefulWidget {
@@ -34,6 +35,7 @@ class _ScalePageState extends State<ScalePage> {
   }
 
   Future<void> _connect() async {
+    final l10n = AppLocalizations.of(context);
     final success = await IminScale.connect(devicePath: _devicePath);
     if (success) {
       _subscription = IminScale.weightStream.listen((data) {
@@ -45,13 +47,13 @@ class _ScalePageState extends State<ScalePage> {
       setState(() => _isConnected = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Scale connected')),
+          SnackBar(content: Text(l10n.scaleConnected)),
         );
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to connect scale')),
+          SnackBar(content: Text(l10n.failedToConnectScale)),
         );
       }
     }
@@ -69,9 +71,10 @@ class _ScalePageState extends State<ScalePage> {
   }
 
   Future<void> _tare() async {
+    final l10n = AppLocalizations.of(context);
     if (_status == ScaleStatus.unstable) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Weight unstable, please wait')),
+        SnackBar(content: Text(l10n.weightUnstable)),
       );
       return;
     }
@@ -79,9 +82,10 @@ class _ScalePageState extends State<ScalePage> {
   }
 
   Future<void> _zero() async {
+    final l10n = AppLocalizations.of(context);
     if (_status == ScaleStatus.unstable) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Weight unstable, please wait')),
+        SnackBar(content: Text(l10n.weightUnstable)),
       );
       return;
     }
@@ -101,23 +105,26 @@ class _ScalePageState extends State<ScalePage> {
     }
   }
 
-  String _getStatusText() {
+  String _getStatusText(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     switch (_status) {
       case ScaleStatus.stable:
-        return 'Stable';
+        return l10n.stable;
       case ScaleStatus.unstable:
-        return 'Unstable';
+        return l10n.unstable;
       case ScaleStatus.overweight:
-        return 'Overweight';
+        return l10n.overweight;
       default:
-        return 'Unknown';
+        return l10n.unknown;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Electronic Scale')),
+      appBar: AppBar(title: Text(l10n.electronicScale)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -130,9 +137,9 @@ class _ScalePageState extends State<ScalePage> {
                   children: [
                     DropdownButtonFormField<String>(
                       value: _devicePath,
-                      decoration: const InputDecoration(
-                        labelText: 'Device Path',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: l10n.devicePath,
+                        border: const OutlineInputBorder(),
                       ),
                       items: _devicePaths.map((path) {
                         return DropdownMenuItem(
@@ -153,7 +160,8 @@ class _ScalePageState extends State<ScalePage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isConnected ? _disconnect : _connect,
-                        child: Text(_isConnected ? 'Disconnect' : 'Connect'),
+                        child:
+                            Text(_isConnected ? l10n.disconnect : l10n.connect),
                       ),
                     ),
                   ],
@@ -176,7 +184,7 @@ class _ScalePageState extends State<ScalePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _getStatusText(),
+                      _getStatusText(context),
                       style: TextStyle(
                         fontSize: 20,
                         color: _getStatusColor(),
@@ -192,14 +200,14 @@ class _ScalePageState extends State<ScalePage> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _isConnected ? _tare : null,
-                    child: const Text('Tare'),
+                    child: Text(l10n.tare),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _isConnected ? _zero : null,
-                    child: const Text('Zero'),
+                    child: Text(l10n.zero),
                   ),
                 ),
               ],

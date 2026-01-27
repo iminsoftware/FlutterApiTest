@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+import '../l10n/app_localizations.dart';
 
 class SegmentPage extends StatefulWidget {
   const SegmentPage({super.key});
@@ -12,7 +13,7 @@ class _SegmentPageState extends State<SegmentPage> {
   final TextEditingController _dataController = TextEditingController();
   final List<String> _history = [];
   bool _isConnected = false;
-  String _deviceInfo = 'No device found';
+  String _deviceInfo = '';
   String _alignMode = 'right';
 
   @override
@@ -21,63 +22,77 @@ class _SegmentPageState extends State<SegmentPage> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Initialize device info with localized text
+    if (_deviceInfo.isEmpty) {
+      final l10n = AppLocalizations.of(context);
+      _deviceInfo = l10n.noDeviceFound;
+    }
+  }
+
   Future<void> _findDevice() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final result = await IminSegment.findDevice();
       setState(() {
         if (result['found'] == true) {
-          _deviceInfo = 'Device found:\n'
+          _deviceInfo = '${l10n.deviceFound}\n'
               'PID: ${result['productId']}\n'
               'VID: ${result['vendorId']}\n'
               'Name: ${result['deviceName']}';
         } else {
-          _deviceInfo = 'No segment device found';
+          _deviceInfo = l10n.noSegmentDeviceFound;
         }
       });
       _showMessage(_deviceInfo);
     } catch (e) {
-      _showError('Find device failed: $e');
+      _showError('${l10n.findDeviceFailed}: $e');
     }
   }
 
   Future<void> _requestPermission() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final granted = await IminSegment.requestPermission();
       if (granted) {
-        _showMessage('USB permission granted');
+        _showMessage(l10n.usbPermissionGranted);
       } else {
-        _showError('USB permission denied');
+        _showError(l10n.usbPermissionDenied);
       }
     } catch (e) {
-      _showError('Request permission failed: $e');
+      _showError('${l10n.requestPermissionFailed}: $e');
     }
   }
 
   Future<void> _connect() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final success = await IminSegment.connect();
       setState(() {
         _isConnected = success;
       });
       if (success) {
-        _showMessage('Connected to segment device');
+        _showMessage(l10n.connectedToSegment);
       } else {
-        _showError('Failed to connect');
+        _showError(l10n.failedToConnect);
       }
     } catch (e) {
-      _showError('Connect failed: $e');
+      _showError('${l10n.connectFailed}: $e');
     }
   }
 
   Future<void> _sendData() async {
+    final l10n = AppLocalizations.of(context);
     final data = _dataController.text;
     if (data.isEmpty) {
-      _showError('Please enter data to display');
+      _showError(l10n.pleaseEnterData);
       return;
     }
 
     if (!_isConnected) {
-      _showError('Please connect to device first');
+      _showError(l10n.pleaseConnectFirst);
       return;
     }
 
@@ -86,55 +101,58 @@ class _SegmentPageState extends State<SegmentPage> {
       setState(() {
         _history.add('${_alignMode == 'left' ? '←' : '→'} $data');
       });
-      _showMessage('Data sent: $data');
+      _showMessage('${l10n.dataSent}: $data');
     } catch (e) {
-      _showError('Send data failed: $e');
+      _showError('${l10n.sendDataFailed}: $e');
     }
   }
 
   Future<void> _clear() async {
+    final l10n = AppLocalizations.of(context);
     if (!_isConnected) {
-      _showError('Please connect to device first');
+      _showError(l10n.pleaseConnectFirst);
       return;
     }
 
     try {
       await IminSegment.clear();
       setState(() {
-        _history.add('🗑️ Clear display');
+        _history.add('🗑️ ${l10n.clearDisplayAction}');
       });
-      _showMessage('Display cleared');
+      _showMessage(l10n.displayCleared);
     } catch (e) {
-      _showError('Clear failed: $e');
+      _showError('${l10n.clearFailed}: $e');
     }
   }
 
   Future<void> _full() async {
+    final l10n = AppLocalizations.of(context);
     if (!_isConnected) {
-      _showError('Please connect to device first');
+      _showError(l10n.pleaseConnectFirst);
       return;
     }
 
     try {
       await IminSegment.full();
       setState(() {
-        _history.add('💡 Full display (test)');
+        _history.add('💡 ${l10n.fullDisplayTest}');
       });
-      _showMessage('Display set to full');
+      _showMessage(l10n.displaySetToFull);
     } catch (e) {
-      _showError('Full display failed: $e');
+      _showError('${l10n.fullDisplayFailed}: $e');
     }
   }
 
   Future<void> _disconnect() async {
+    final l10n = AppLocalizations.of(context);
     try {
       await IminSegment.disconnect();
       setState(() {
         _isConnected = false;
       });
-      _showMessage('Disconnected from device');
+      _showMessage(l10n.disconnectedFromDevice);
     } catch (e) {
-      _showError('Disconnect failed: $e');
+      _showError('${l10n.disconnectFailed}: $e');
     }
   }
 
@@ -160,14 +178,16 @@ class _SegmentPageState extends State<SegmentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Segment Display'),
+        title: Text(l10n.segmentDisplay),
         actions: [
           IconButton(
             icon: Icon(_isConnected ? Icons.link : Icons.link_off),
             onPressed: null,
-            tooltip: _isConnected ? 'Connected' : 'Disconnected',
+            tooltip: _isConnected ? l10n.connected : l10n.disconnected,
           ),
         ],
       ),
@@ -181,9 +201,9 @@ class _SegmentPageState extends State<SegmentPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Device Information',
-                    style: TextStyle(
+                  Text(
+                    l10n.deviceInformation,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -197,7 +217,7 @@ class _SegmentPageState extends State<SegmentPage> {
                         child: ElevatedButton.icon(
                           onPressed: _findDevice,
                           icon: const Icon(Icons.search),
-                          label: const Text('Find Device'),
+                          label: Text(l10n.findDevice),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -205,7 +225,7 @@ class _SegmentPageState extends State<SegmentPage> {
                         child: ElevatedButton.icon(
                           onPressed: _requestPermission,
                           icon: const Icon(Icons.security),
-                          label: const Text('Permission'),
+                          label: Text(l10n.permission),
                         ),
                       ),
                     ],
@@ -216,7 +236,8 @@ class _SegmentPageState extends State<SegmentPage> {
                     child: ElevatedButton.icon(
                       onPressed: _isConnected ? _disconnect : _connect,
                       icon: Icon(_isConnected ? Icons.link_off : Icons.link),
-                      label: Text(_isConnected ? 'Disconnect' : 'Connect'),
+                      label:
+                          Text(_isConnected ? l10n.disconnect : l10n.connect),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             _isConnected ? Colors.orange : Colors.blue,
@@ -236,9 +257,9 @@ class _SegmentPageState extends State<SegmentPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Display Control',
-                    style: TextStyle(
+                  Text(
+                    l10n.displayControl,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -246,21 +267,21 @@ class _SegmentPageState extends State<SegmentPage> {
                   const SizedBox(height: 16),
                   TextField(
                     controller: _dataController,
-                    decoration: const InputDecoration(
-                      labelText: 'Data to Display',
-                      hintText: 'Enter text (max 9 chars)',
-                      border: OutlineInputBorder(),
-                      helperText: 'Numbers, letters, and symbols supported',
+                    decoration: InputDecoration(
+                      labelText: l10n.dataToDisplay,
+                      hintText: l10n.enterDataToDisplay,
+                      border: const OutlineInputBorder(),
+                      helperText: l10n.numbersLettersSupported,
                     ),
                     maxLength: 9,
                   ),
                   const SizedBox(height: 16),
-                  const Text('Alignment:'),
+                  Text(l10n.alignment),
                   Row(
                     children: [
                       Expanded(
                         child: RadioListTile<String>(
-                          title: const Text('Right'),
+                          title: Text(l10n.rightAlign),
                           value: 'right',
                           groupValue: _alignMode,
                           onChanged: (value) {
@@ -272,7 +293,7 @@ class _SegmentPageState extends State<SegmentPage> {
                       ),
                       Expanded(
                         child: RadioListTile<String>(
-                          title: const Text('Left'),
+                          title: Text(l10n.leftAlign),
                           value: 'left',
                           groupValue: _alignMode,
                           onChanged: (value) {
@@ -291,7 +312,7 @@ class _SegmentPageState extends State<SegmentPage> {
                         child: ElevatedButton.icon(
                           onPressed: _sendData,
                           icon: const Icon(Icons.send),
-                          label: const Text('Send'),
+                          label: Text(l10n.send),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                           ),
@@ -302,7 +323,7 @@ class _SegmentPageState extends State<SegmentPage> {
                         child: ElevatedButton.icon(
                           onPressed: _clear,
                           icon: const Icon(Icons.clear),
-                          label: const Text('Clear'),
+                          label: Text(l10n.clear),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                           ),
@@ -313,7 +334,7 @@ class _SegmentPageState extends State<SegmentPage> {
                         child: ElevatedButton.icon(
                           onPressed: _full,
                           icon: const Icon(Icons.lightbulb),
-                          label: const Text('Full'),
+                          label: Text(l10n.full),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.purple,
                           ),
@@ -338,9 +359,9 @@ class _SegmentPageState extends State<SegmentPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'History',
-                          style: TextStyle(
+                        Text(
+                          l10n.history,
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -352,7 +373,7 @@ class _SegmentPageState extends State<SegmentPage> {
                             });
                           },
                           icon: const Icon(Icons.delete_outline),
-                          label: const Text('Clear'),
+                          label: Text(l10n.clear),
                         ),
                       ],
                     ),
@@ -360,10 +381,10 @@ class _SegmentPageState extends State<SegmentPage> {
                   const Divider(height: 1),
                   Expanded(
                     child: _history.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
-                              'No history yet',
-                              style: TextStyle(color: Colors.grey),
+                              l10n.noHistoryYet,
+                              style: const TextStyle(color: Colors.grey),
                             ),
                           )
                         : ListView.builder(

@@ -33,5 +33,11 @@ export 'src/segment/segment_api.dart';
 // Floating Window
 export 'src/floating_window/floating_window_api.dart';
 
-// RFID (TODO)
-// export 'src/rfid/rfid_api.dart';
+// Camera Scan
+export 'src/camera/camera_scan_api.dart';
+
+// RFID
+export 'src/rfid/rfid_api.dart';
+
+// Device Info
+export 'src/device/device_info_api.dart';

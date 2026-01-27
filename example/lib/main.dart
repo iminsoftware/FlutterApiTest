@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 import 'pages/display_page.dart';
 import 'pages/cashbox_page.dart';
 import 'pages/light_page.dart';
@@ -9,7 +11,10 @@ import 'pages/scale_page.dart';
 import 'pages/serial_page.dart';
 import 'pages/rfid_page.dart';
 import 'pages/segment_page.dart';
+import 'pages/camera_scan_page.dart';
+import 'pages/floating_window_page.dart';
 import 'utils/permission_helper.dart';
+import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,11 +26,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'iMin Hardware Demo',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const HomePage(),
     );
   }
@@ -39,11 +51,41 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String _brand = 'iMin';
+  String _model = '加载中...';
+  String _serialNumber = '加载中...';
+  String _deviceName = '加载中...';
+
   @override
   void initState() {
     super.initState();
     // 应用启动时主动申请权限
     _requestPermissionsOnStartup();
+    // 加载设备信息
+    _loadDeviceInfo();
+  }
+
+  Future<void> _loadDeviceInfo() async {
+    try {
+      final deviceInfo = await IminDeviceInfo.getDeviceInfo();
+      if (mounted) {
+        setState(() {
+          _brand = deviceInfo.brand;
+          _model = deviceInfo.model;
+          _serialNumber = deviceInfo.serialNumber;
+          _deviceName = deviceInfo.deviceName;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _brand = 'iMin';
+          _model = '未知设备';
+          _serialNumber = '未知';
+          _deviceName = '未知';
+        });
+      }
+    }
   }
 
   Future<void> _requestPermissionsOnStartup() async {
@@ -64,7 +106,7 @@ class _HomePageState extends State<HomePage> {
         if (granted && mounted) {
           PermissionHelper.showMessage(
             context,
-            'Display permission granted successfully',
+            AppLocalizations.of(context).permissionGranted,
           );
         }
       }
@@ -73,10 +115,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('iMin Hardware Demo'),
+        title: Text(l10n.appTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -89,13 +133,14 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Device Information',
+                    l10n.deviceInfo,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
-                  const Text('Brand: iMin'),
-                  const Text('Model: Testing Device'),
-                  const Text('SDK Version: 1.0.25'),
+                  Text('${l10n.brand}: $_brand'),
+                  Text('${l10n.model}: $_model'),
+                  Text('SN: $_serialNumber'),
+                  Text('${l10n.sdkVersion}: 1.0.25'),
                 ],
               ),
             ),
@@ -104,7 +149,7 @@ class _HomePageState extends State<HomePage> {
 
           // Hardware Features
           Text(
-            'Hardware Features',
+            l10n.hardwareFeatures,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
@@ -112,8 +157,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.tv,
-            title: 'Dual Screen Display',
-            subtitle: 'Secondary display control',
+            title: l10n.dualScreen,
+            subtitle: l10n.dualScreenDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const DisplayPage()),
@@ -123,8 +168,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.point_of_sale,
-            title: 'Cash Box',
-            subtitle: 'Cash drawer control',
+            title: l10n.cashBox,
+            subtitle: l10n.cashBoxDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CashBoxPage()),
@@ -134,8 +179,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.lightbulb,
-            title: 'Light Control',
-            subtitle: 'LED indicator lights',
+            title: l10n.lightControl,
+            subtitle: l10n.lightControlDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const LightPage()),
@@ -145,8 +190,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.nfc,
-            title: 'NFC Reader',
-            subtitle: 'NFC card reading',
+            title: l10n.nfcReader,
+            subtitle: l10n.nfcReaderDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const NfcPage()),
@@ -156,8 +201,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.qr_code_scanner,
-            title: 'Scanner',
-            subtitle: 'Barcode/QR code scanning',
+            title: l10n.scanner,
+            subtitle: l10n.scannerDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ScannerPage()),
@@ -167,8 +212,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.credit_card,
-            title: 'MSR (Magnetic Stripe Reader)',
-            subtitle: 'Magnetic card reading',
+            title: l10n.msr,
+            subtitle: l10n.msrDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const MsrPage()),
@@ -178,8 +223,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.scale,
-            title: 'Electronic Scale',
-            subtitle: 'Weight measurement',
+            title: l10n.scale,
+            subtitle: l10n.scaleDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ScalePage()),
@@ -189,8 +234,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.cable,
-            title: 'Serial Port',
-            subtitle: 'Serial communication',
+            title: l10n.serialPort,
+            subtitle: l10n.serialPortDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SerialPage()),
@@ -200,8 +245,8 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.sensors,
-            title: 'RFID',
-            subtitle: 'RFID tag read/write',
+            title: l10n.rfid,
+            subtitle: l10n.rfidDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const RfidPage()),
@@ -211,11 +256,34 @@ class _HomePageState extends State<HomePage> {
           _buildFeatureButton(
             context,
             icon: Icons.pin,
-            title: 'Segment Display',
-            subtitle: 'Digital tube display',
+            title: l10n.segmentDisplay,
+            subtitle: l10n.segmentDisplayDesc,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SegmentPage()),
+            ),
+          ),
+
+          _buildFeatureButton(
+            context,
+            icon: Icons.camera_alt,
+            title: l10n.cameraScan,
+            subtitle: l10n.cameraScanDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CameraScanPage()),
+            ),
+          ),
+
+          _buildFeatureButton(
+            context,
+            icon: Icons.picture_in_picture,
+            title: l10n.floatingWindow,
+            subtitle: l10n.floatingWindowDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const FloatingWindowPage()),
             ),
           ),
         ],

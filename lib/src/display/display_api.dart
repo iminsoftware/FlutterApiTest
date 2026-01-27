@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 ///
 /// Controls the secondary display on iMin POS devices.
 class IminDisplay {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
 
   /// Check if secondary display is available
   static Future<bool> isAvailable() async {

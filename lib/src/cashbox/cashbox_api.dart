@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 ///
 /// Controls the cash drawer on iMin POS devices.
 class IminCashBox {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
 
   /// Open the cash box
   ///

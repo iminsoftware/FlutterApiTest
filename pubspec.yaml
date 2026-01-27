@@ -1,7 +1,9 @@
 name: imin_hardware_plugin
-description: A Flutter plugin for iMin POS hardware control (Display, Scanner, NFC, RFID, etc.)
-version: 0.4.0
+description: A comprehensive Flutter plugin for controlling iMin POS device hardware features including display, cashbox, light, NFC, scanner, MSR, scale, serial port, segment display, floating window, and camera scanning.
+version: 1.0.0
 homepage: https://github.com/yourusername/imin_hardware_plugin
+repository: https://github.com/yourusername/imin_hardware_plugin
+issue_tracker: https://github.com/yourusername/imin_hardware_plugin/issues
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

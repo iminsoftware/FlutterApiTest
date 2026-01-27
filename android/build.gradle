@@ -51,9 +51,16 @@ android {
         implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
         implementation files('libs/IminLibs1.0.25.jar')
         implementation files('libs/NeoStraElectronicSDK-3-v1.3_2302281129.jar')
+        implementation files('libs/IminRfidSdk1.0.5.jar')
         
         // Glide for image loading
         implementation 'com.github.bumptech.glide:glide:4.16.0'
         annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+        
+        // Gson for JSON serialization
+        implementation 'com.google.code.gson:gson:2.10.1'
+        
+        // Scan library
+        implementation project(':scanlibrary')
     }
 }

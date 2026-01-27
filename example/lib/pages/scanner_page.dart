@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+import '../l10n/app_localizations.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({Key? key}) : super(key: key);
@@ -46,17 +47,21 @@ class _ScannerPageState extends State<ScannerPage> {
   }
 
   Future<void> _checkConnection() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final connected = await IminScanner.isConnected();
       setState(() {
         _isConnected = connected;
       });
     } catch (e) {
-      _showError('Check connection failed: $e');
+      _showError('${l10n.error}: $e');
     }
   }
 
   Future<void> _configure() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       await IminScanner.configure(
         action: _actionController.text.trim().isEmpty
@@ -72,13 +77,15 @@ class _ScannerPageState extends State<ScannerPage> {
 
       // 关闭键盘
       FocusScope.of(context).unfocus();
-      _showSuccess('Configuration saved');
+      _showSuccess(l10n.permissionGranted);
     } catch (e) {
-      _showError('Configure failed: $e');
+      _showError('${l10n.error}: $e');
     }
   }
 
   Future<void> _startListening() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final started = await IminScanner.startListening();
       if (started) {
@@ -102,12 +109,12 @@ class _ScannerPageState extends State<ScannerPage> {
               setState(() {
                 _isConnected = true;
               });
-              _showSuccess('Scanner connected');
+              _showSuccess(l10n.scannerConnected);
             } else if (event is ScannerDisconnected) {
               setState(() {
                 _isConnected = false;
               });
-              _showError('Scanner disconnected');
+              _showError(l10n.scannerNotConnected);
             } else if (event is ScannerConnectionStatus) {
               setState(() {
                 _isConnected = event.connected;
@@ -115,20 +122,22 @@ class _ScannerPageState extends State<ScannerPage> {
             }
           },
           onError: (error) {
-            _showError('Scan error: $error');
+            _showError('${l10n.error}: $error');
           },
         );
 
-        _showSuccess('Started listening');
+        _showSuccess(l10n.startListening);
       } else {
-        _showError('Already listening');
+        _showError(l10n.listening);
       }
     } catch (e) {
-      _showError('Start listening failed: $e');
+      _showError('${l10n.error}: $e');
     }
   }
 
   Future<void> _stopListening() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       await _scanSubscription?.cancel();
       _scanSubscription = null;
@@ -138,12 +147,12 @@ class _ScannerPageState extends State<ScannerPage> {
         setState(() {
           _isListening = false;
         });
-        _showSuccess('Stopped listening');
+        _showSuccess(l10n.stopListening);
       } else {
-        _showError('Not listening');
+        _showError(l10n.notListening);
       }
     } catch (e) {
-      _showError('Stop listening failed: $e');
+      _showError('${l10n.error}: $e');
     }
   }
 
@@ -176,13 +185,15 @@ class _ScannerPageState extends State<ScannerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return GestureDetector(
       // 点击空白处关闭键盘
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         resizeToAvoidBottomInset: true, // 重要：让页面适应键盘
         appBar: AppBar(
-          title: const Text('Scanner Test'),
+          title: Text(l10n.scanner),
           actions: [
             // Connection status indicator
             Padding(
@@ -195,7 +206,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _isConnected ? 'Connected' : 'Disconnected',
+                    _isConnected ? l10n.connected : l10n.disconnected,
                     style: TextStyle(
                       color: _isConnected ? Colors.green : Colors.grey,
                       fontSize: 12,
@@ -222,9 +233,9 @@ class _ScannerPageState extends State<ScannerPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Custom Configuration (Optional)',
-                                style: TextStyle(
+                              Text(
+                                l10n.customConfig,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -233,9 +244,9 @@ class _ScannerPageState extends State<ScannerPage> {
                               TextField(
                                 controller: _actionController,
                                 textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(
-                                  labelText: 'Broadcast Action',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: l10n.broadcastAction,
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
                                   filled: true,
                                   fillColor: Colors.white,
@@ -245,9 +256,9 @@ class _ScannerPageState extends State<ScannerPage> {
                               TextField(
                                 controller: _dataKeyController,
                                 textInputAction: TextInputAction.next,
-                                decoration: const InputDecoration(
-                                  labelText: 'String Data Key',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: l10n.stringDataKey,
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
                                   filled: true,
                                   fillColor: Colors.white,
@@ -261,9 +272,9 @@ class _ScannerPageState extends State<ScannerPage> {
                                   FocusScope.of(context).unfocus();
                                   _configure();
                                 },
-                                decoration: const InputDecoration(
-                                  labelText: 'Byte Data Key',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: l10n.byteDataKey,
+                                  border: const OutlineInputBorder(),
                                   isDense: true,
                                   filled: true,
                                   fillColor: Colors.white,
@@ -274,7 +285,7 @@ class _ScannerPageState extends State<ScannerPage> {
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   onPressed: _configure,
-                                  child: const Text('Apply Configuration'),
+                                  child: Text(l10n.applyConfig),
                                 ),
                               ),
                             ],
@@ -295,7 +306,7 @@ class _ScannerPageState extends State<ScannerPage> {
                                     onPressed:
                                         _isListening ? null : _startListening,
                                     icon: const Icon(Icons.play_arrow),
-                                    label: const Text('Start'),
+                                    label: Text(l10n.startListening),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green,
                                       foregroundColor: Colors.white,
@@ -308,7 +319,7 @@ class _ScannerPageState extends State<ScannerPage> {
                                     onPressed:
                                         _isListening ? _stopListening : null,
                                     icon: const Icon(Icons.stop),
-                                    label: const Text('Stop'),
+                                    label: Text(l10n.stopListening),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.red,
                                       foregroundColor: Colors.white,
@@ -324,7 +335,7 @@ class _ScannerPageState extends State<ScannerPage> {
                                   child: ElevatedButton.icon(
                                     onPressed: _checkConnection,
                                     icon: const Icon(Icons.refresh),
-                                    label: const Text('Check'),
+                                    label: Text(l10n.status),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -334,7 +345,7 @@ class _ScannerPageState extends State<ScannerPage> {
                                         ? null
                                         : _clearHistory,
                                     icon: const Icon(Icons.clear_all),
-                                    label: const Text('Clear'),
+                                    label: Text(l10n.clear),
                                   ),
                                 ),
                               ],
@@ -354,8 +365,8 @@ class _ScannerPageState extends State<ScannerPage> {
                           children: [
                             Text(
                               _isListening
-                                  ? '🟢 Listening...'
-                                  : '⚪ Not Listening',
+                                  ? '🟢 ${l10n.listening}'
+                                  : '⚪ ${l10n.notListening}',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color:
@@ -363,7 +374,7 @@ class _ScannerPageState extends State<ScannerPage> {
                               ),
                             ),
                             Text(
-                              'Total: $_scanCount',
+                              '${l10n.scanCount}: $_scanCount',
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -389,8 +400,8 @@ class _ScannerPageState extends State<ScannerPage> {
                                     const SizedBox(height: 16),
                                     Text(
                                       _isListening
-                                          ? 'Waiting for scan...'
-                                          : 'Start listening to receive scans',
+                                          ? l10n.noScanData
+                                          : l10n.scannerTips,
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: Colors.grey[600],
@@ -435,7 +446,7 @@ class _ScannerPageState extends State<ScannerPage> {
                                           const SizedBox(height: 4),
                                           Text('Type: ${scan.labelType}'),
                                           Text(
-                                            'Time: ${_formatTime(scan.timestamp)}',
+                                            '${l10n.timestamp}: ${_formatTime(scan.timestamp)}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey[600],

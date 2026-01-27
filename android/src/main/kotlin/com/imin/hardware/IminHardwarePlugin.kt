@@ -21,6 +21,8 @@ import com.imin.hardware.serial.SerialHandler
 import com.imin.hardware.rfid.RfidHandler
 import com.imin.hardware.segment.SegmentHandler
 import com.imin.hardware.floatingwindow.FloatingWindowHandler
+import com.imin.hardware.camera.CameraScanHandler
+import com.imin.hardware.device.DeviceInfoHandler
 
 /** IminHardwarePlugin */
 class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -30,6 +32,9 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var msrEventChannel: EventChannel
   private lateinit var scaleEventChannel: EventChannel
   private lateinit var serialEventChannel: EventChannel
+  private lateinit var rfidTagEventChannel: EventChannel
+  private lateinit var rfidConnectionEventChannel: EventChannel
+  private lateinit var rfidBatteryEventChannel: EventChannel
   private var activity: Activity? = null
   private var activityBinding: ActivityPluginBinding? = null
   
@@ -45,17 +50,22 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private var rfidHandler: RfidHandler? = null
   private var segmentHandler: SegmentHandler? = null
   private var floatingWindowHandler: FloatingWindowHandler? = null
+  private var cameraScanHandler: CameraScanHandler? = null
+  private var deviceInfoHandler: DeviceInfoHandler? = null
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "com.imin.hardware")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin")
     channel.setMethodCallHandler(this)
     
     // Create EventChannels
-    nfcEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "com.imin.hardware/nfc")
-    scannerEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "com.imin.hardware/scanner")
-    msrEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "com.imin.hardware/msr")
-    scaleEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "com.imin.hardware/scale")
-    serialEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "com.imin.hardware/serial")
+    nfcEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/nfc")
+    scannerEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/scanner")
+    msrEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/msr")
+    scaleEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/scale")
+    serialEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/serial")
+    rfidTagEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/rfid_tag")
+    rfidConnectionEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/rfid_connection")
+    rfidBatteryEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/rfid_battery")
   }
 
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -76,6 +86,8 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       call.method.startsWith("rfid.") -> rfidHandler?.handle(call, result)
       call.method.startsWith("segment.") -> segmentHandler?.handle(call, result)
       call.method.startsWith("floatingWindow.") -> floatingWindowHandler?.handle(call, result)
+      call.method.startsWith("cameraScan.") -> cameraScanHandler?.handle(call, result)
+      call.method.startsWith("device.") -> deviceInfoHandler?.onMethodCall(call, result)
       else -> result.notImplemented()
     }
   }
@@ -138,9 +150,21 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         scaleHandler?.setEventSink(null)
       }
     })
-    rfidHandler = RfidHandler(activity)
+    
+    // Initialize RFID Handler with EventChannels
+    rfidHandler = RfidHandler(activity.applicationContext, activity)
+    rfidTagEventChannel.setStreamHandler(rfidHandler)
+    rfidConnectionEventChannel.setStreamHandler(rfidHandler)
+    rfidBatteryEventChannel.setStreamHandler(rfidHandler)
+    rfidHandler?.registerReceiver()
+    
     segmentHandler = SegmentHandler(activity)
     floatingWindowHandler = FloatingWindowHandler(activity)
+    cameraScanHandler = CameraScanHandler(activity)
+    deviceInfoHandler = DeviceInfoHandler()
+    
+    // Register activity result listener for camera scan
+    binding.addActivityResultListener(cameraScanHandler!!)
   }
 
   private fun cleanupHandlers() {
@@ -152,9 +176,10 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     msrHandler?.cleanup()
     scaleHandler?.cleanup()
     serialHandler?.cleanup()
-    rfidHandler?.cleanup()
+    rfidHandler?.dispose()
     segmentHandler?.cleanup()
     floatingWindowHandler?.cleanup()
+    cameraScanHandler?.cleanup()
     
     displayHandler = null
     cashBoxHandler = null
@@ -167,5 +192,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     rfidHandler = null
     segmentHandler = null
     floatingWindowHandler = null
+    cameraScanHandler = null
+    deviceInfoHandler = null
   }
 }

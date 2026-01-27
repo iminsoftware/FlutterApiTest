@@ -8,9 +8,9 @@ import 'package:flutter/services.dart';
 /// Supported devices: Crane 1, Swan 1, Swan 2, Swift 1, Swift 2, Swift 2 Ultra,
 /// Lark 1, Falcon 2, M2-Pro
 class IminNfc {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
   static const EventChannel _eventChannel =
-      EventChannel('com.imin.hardware/nfc');
+      EventChannel('imin_hardware_plugin/nfc');
 
   /// Check if NFC is available on this device
   ///

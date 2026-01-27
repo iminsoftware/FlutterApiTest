@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 ///
 /// Provides functionality to show/hide a floating window overlay
 class FloatingWindowApi {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
 
   /// Show the floating window
   ///

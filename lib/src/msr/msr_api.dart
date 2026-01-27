@@ -29,7 +29,7 @@ import 'package:flutter/services.dart';
 /// )
 /// ```
 class IminMsr {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
 
   /// Check if MSR device is available
   ///

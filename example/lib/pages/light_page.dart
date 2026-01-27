@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+import '../l10n/app_localizations.dart';
 
 class LightPage extends StatefulWidget {
   const LightPage({super.key});
@@ -10,111 +11,130 @@ class LightPage extends StatefulWidget {
 
 class _LightPageState extends State<LightPage> {
   bool _isConnected = false;
-  String _statusMessage = 'Not connected';
+  String _statusMessage = '';
   LightColor _currentLight = LightColor.off;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        _statusMessage = l10n.notConnected;
+      });
+    });
+  }
+
   Future<void> _connect() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminLight.connect();
       if (mounted) {
         setState(() {
           _isConnected = success;
-          _statusMessage = success
-              ? 'Connected to light device'
-              : 'Failed to connect. Please check USB connection.';
+          _statusMessage =
+              success ? l10n.connectedToDevice : l10n.failedToConnect;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
   }
 
   Future<void> _turnOnGreen() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminLight.turnOnGreen();
       if (mounted) {
         setState(() {
           if (success) {
             _currentLight = LightColor.green;
-            _statusMessage = 'Green light is ON';
+            _statusMessage = l10n.greenLightOn;
           } else {
-            _statusMessage = 'Failed to turn on green light';
+            _statusMessage = l10n.failedToTurnOnGreen;
           }
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
   }
 
   Future<void> _turnOnRed() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminLight.turnOnRed();
       if (mounted) {
         setState(() {
           if (success) {
             _currentLight = LightColor.red;
-            _statusMessage = 'Red light is ON';
+            _statusMessage = l10n.redLightOn;
           } else {
-            _statusMessage = 'Failed to turn on red light';
+            _statusMessage = l10n.failedToTurnOnRed;
           }
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
   }
 
   Future<void> _turnOff() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminLight.turnOff();
       if (mounted) {
         setState(() {
           if (success) {
             _currentLight = LightColor.off;
-            _statusMessage = 'Light is OFF';
+            _statusMessage = l10n.lightOff;
           } else {
-            _statusMessage = 'Failed to turn off light';
+            _statusMessage = l10n.failedToTurnOff;
           }
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
   }
 
   Future<void> _disconnect() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminLight.disconnect();
       if (mounted) {
         setState(() {
           _isConnected = false;
           _currentLight = LightColor.off;
-          _statusMessage = success
-              ? 'Disconnected from light device'
-              : 'Failed to disconnect';
+          _statusMessage =
+              success ? l10n.disconnectedFromDevice : l10n.failedToDisconnect;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
@@ -122,10 +142,12 @@ class _LightPageState extends State<LightPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Light Control'),
+        title: Text(l10n.lightControl),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -140,7 +162,7 @@ class _LightPageState extends State<LightPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Device Status',
+                      l10n.deviceStatus,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
@@ -157,7 +179,9 @@ class _LightPageState extends State<LightPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _isConnected ? 'CONNECTED' : 'DISCONNECTED',
+                                _isConnected
+                                    ? l10n.connected
+                                    : l10n.disconnected,
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineSmall
@@ -191,7 +215,7 @@ class _LightPageState extends State<LightPage> {
                 child: Column(
                   children: [
                     Text(
-                      'Current Light Status',
+                      l10n.currentLightStatus,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 16),
@@ -240,7 +264,7 @@ class _LightPageState extends State<LightPage> {
               ElevatedButton.icon(
                 onPressed: _connect,
                 icon: const Icon(Icons.usb),
-                label: const Text('Connect Device'),
+                label: Text(l10n.connectDevice),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                   backgroundColor: Colors.blue,
@@ -250,14 +274,14 @@ class _LightPageState extends State<LightPage> {
             ] else ...[
               // Light Controls
               Text(
-                'Light Controls',
+                l10n.lightControls,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               ElevatedButton.icon(
                 onPressed: _turnOnGreen,
                 icon: const Icon(Icons.lightbulb),
-                label: const Text('Turn On Green Light'),
+                label: Text(l10n.turnOnGreenLight),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                   backgroundColor: Colors.green,
@@ -268,7 +292,7 @@ class _LightPageState extends State<LightPage> {
               ElevatedButton.icon(
                 onPressed: _turnOnRed,
                 icon: const Icon(Icons.lightbulb),
-                label: const Text('Turn On Red Light'),
+                label: Text(l10n.turnOnRedLight),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                   backgroundColor: Colors.red,
@@ -279,7 +303,7 @@ class _LightPageState extends State<LightPage> {
               ElevatedButton.icon(
                 onPressed: _turnOff,
                 icon: const Icon(Icons.lightbulb_outline),
-                label: const Text('Turn Off Light'),
+                label: Text(l10n.turnOffLight),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -288,7 +312,7 @@ class _LightPageState extends State<LightPage> {
               OutlinedButton.icon(
                 onPressed: _disconnect,
                 icon: const Icon(Icons.usb_off),
-                label: const Text('Disconnect Device'),
+                label: Text(l10n.disconnectDevice),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
                 ),
@@ -297,34 +321,30 @@ class _LightPageState extends State<LightPage> {
             const SizedBox(height: 24),
 
             // Tips
-            const Card(
+            Card(
               color: Colors.blue,
               child: Padding(
-                padding: EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info, color: Colors.white),
-                        SizedBox(width: 8),
+                        const Icon(Icons.info, color: Colors.white),
+                        const SizedBox(width: 8),
                         Text(
-                          'Tips',
-                          style: TextStyle(
+                          l10n.tips,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      '• Connect USB light device first\n'
-                      '• Grant USB permission when prompted\n'
-                      '• Green light: Success/Ready state\n'
-                      '• Red light: Error/Busy state\n'
-                      '• Supported devices: Crane 1, M2-Pro',
-                      style: TextStyle(color: Colors.white),
+                      l10n.lightTips,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
@@ -348,13 +368,15 @@ class _LightPageState extends State<LightPage> {
   }
 
   String _getLightStatusText() {
+    final l10n = AppLocalizations.of(context);
+
     switch (_currentLight) {
       case LightColor.green:
-        return 'GREEN LIGHT ON';
+        return l10n.greenLightOnStatus;
       case LightColor.red:
-        return 'RED LIGHT ON';
+        return l10n.redLightOnStatus;
       case LightColor.off:
-        return 'LIGHT OFF';
+        return l10n.lightOffStatus;
     }
   }
 }

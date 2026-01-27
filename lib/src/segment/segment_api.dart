@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 ///
 /// 用于控制 iMin 设备的数码管显示屏
 class IminSegment {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
 
   /// 查找数码管设备
   ///

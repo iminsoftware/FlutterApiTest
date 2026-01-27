@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+import '../l10n/app_localizations.dart';
 
 class NfcPage extends StatefulWidget {
   const NfcPage({super.key});
@@ -14,7 +15,7 @@ class _NfcPageState extends State<NfcPage> {
   bool _isAvailable = false;
   bool _isEnabled = false;
   bool _isListening = false;
-  String _statusMessage = 'Checking NFC status...';
+  String _statusMessage = '';
   NfcTag? _currentTag;
   final List<NfcTag> _tagHistory = [];
   StreamSubscription<NfcTag>? _tagSubscription;
@@ -22,7 +23,9 @@ class _NfcPageState extends State<NfcPage> {
   @override
   void initState() {
     super.initState();
-    _checkNfcStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkNfcStatus();
+    });
   }
 
   @override
@@ -32,6 +35,12 @@ class _NfcPageState extends State<NfcPage> {
   }
 
   Future<void> _checkNfcStatus() async {
+    final l10n = AppLocalizations.of(context);
+
+    setState(() {
+      _statusMessage = l10n.checkingNfcStatus;
+    });
+
     try {
       final available = await IminNfc.isAvailable();
       final enabled = await IminNfc.isEnabled();
@@ -51,31 +60,35 @@ class _NfcPageState extends State<NfcPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
   }
 
   String _getStatusMessage() {
+    final l10n = AppLocalizations.of(context);
+
     if (!_isAvailable) {
-      return 'NFC not available on this device';
+      return l10n.nfcNotAvailable;
     }
     if (!_isEnabled) {
-      return 'NFC is disabled. Please enable it in settings.';
+      return l10n.nfcDisabled;
     }
     if (_isListening) {
-      return 'Ready to scan NFC tags';
+      return l10n.readyToScanNfc;
     }
-    return 'NFC is available and enabled';
+    return l10n.nfcAvailableAndEnabled;
   }
 
   void _startListening() {
     if (_isListening) return;
 
+    final l10n = AppLocalizations.of(context);
+
     setState(() {
       _isListening = true;
-      _statusMessage = 'Ready to scan NFC tags';
+      _statusMessage = l10n.readyToScanNfc;
     });
 
     _tagSubscription = IminNfc.tagStream.listen(
@@ -93,8 +106,9 @@ class _NfcPageState extends State<NfcPage> {
       },
       onError: (error) {
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           setState(() {
-            _statusMessage = 'Error: $error';
+            _statusMessage = '${l10n.error}: $error';
           });
         }
       },
@@ -111,23 +125,25 @@ class _NfcPageState extends State<NfcPage> {
   }
 
   Future<void> _openSettings() async {
+    final l10n = AppLocalizations.of(context);
     try {
       await IminNfc.openSettings();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.error}: $e')),
         );
       }
     }
   }
 
   void _copyToClipboard(String text) {
+    final l10n = AppLocalizations.of(context);
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Copied to clipboard'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(l10n.permissionGranted),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -141,16 +157,18 @@ class _NfcPageState extends State<NfcPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('NFC Reader'),
+        title: Text(l10n.nfcReader),
         actions: [
           if (_tagHistory.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep),
               onPressed: _clearHistory,
-              tooltip: 'Clear history',
+              tooltip: l10n.clearHistory,
             ),
         ],
       ),
@@ -179,7 +197,7 @@ class _NfcPageState extends State<NfcPage> {
               // History Section
               if (_tagHistory.isNotEmpty) ...[
                 Text(
-                  'Scan History (${_tagHistory.length})',
+                  '${l10n.tagHistory} (${_tagHistory.length})',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
@@ -197,6 +215,8 @@ class _NfcPageState extends State<NfcPage> {
   }
 
   Widget _buildStatusCard() {
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -204,7 +224,7 @@ class _NfcPageState extends State<NfcPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'NFC Status',
+              l10n.nfcStatus,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
@@ -230,7 +250,9 @@ class _NfcPageState extends State<NfcPage> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _isAvailable ? 'Available' : 'Not Available',
+                            _isAvailable
+                                ? l10n.nfcReader
+                                : l10n.nfcNotAvailable,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -245,7 +267,7 @@ class _NfcPageState extends State<NfcPage> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _isEnabled ? 'Enabled' : 'Disabled',
+                            _isEnabled ? l10n.enable : l10n.disable,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -267,7 +289,9 @@ class _NfcPageState extends State<NfcPage> {
   }
 
   Widget _buildCurrentTagCard() {
+    final l10n = AppLocalizations.of(context);
     final tag = _currentTag!;
+
     return Card(
       color: Colors.blue[50],
       child: Padding(
@@ -280,7 +304,7 @@ class _NfcPageState extends State<NfcPage> {
                 const Icon(Icons.nfc, color: Colors.blue, size: 32),
                 const SizedBox(width: 8),
                 Text(
-                  'Current Tag',
+                  l10n.currentTag,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.blue[900],
                         fontWeight: FontWeight.bold,
@@ -297,7 +321,7 @@ class _NfcPageState extends State<NfcPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'NFC ID',
+                        l10n.tagId,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       const SizedBox(height: 4),
@@ -316,14 +340,14 @@ class _NfcPageState extends State<NfcPage> {
                 IconButton(
                   icon: const Icon(Icons.copy),
                   onPressed: () => _copyToClipboard(tag.id),
-                  tooltip: 'Copy ID',
+                  tooltip: l10n.tagId,
                 ),
               ],
             ),
             if (tag.content.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
-                'Content',
+                l10n.content,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 4),
@@ -362,17 +386,19 @@ class _NfcPageState extends State<NfcPage> {
   }
 
   Widget _buildControlButtons() {
+    final l10n = AppLocalizations.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (!_isAvailable) ...[
-          const Card(
+          Card(
             color: Colors.red,
             child: Padding(
-              padding: EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(12.0),
               child: Text(
-                'NFC is not available on this device',
-                style: TextStyle(color: Colors.white),
+                l10n.nfcNotAvailable,
+                style: const TextStyle(color: Colors.white),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -381,7 +407,7 @@ class _NfcPageState extends State<NfcPage> {
           ElevatedButton.icon(
             onPressed: _openSettings,
             icon: const Icon(Icons.settings),
-            label: const Text('Open NFC Settings'),
+            label: Text(l10n.openNfcSettings),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.all(16),
               backgroundColor: Colors.orange,
@@ -393,7 +419,7 @@ class _NfcPageState extends State<NfcPage> {
             ElevatedButton.icon(
               onPressed: _startListening,
               icon: const Icon(Icons.play_arrow),
-              label: const Text('Start Scanning'),
+              label: Text(l10n.startListening),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
                 backgroundColor: Colors.green,
@@ -404,7 +430,7 @@ class _NfcPageState extends State<NfcPage> {
             ElevatedButton.icon(
               onPressed: _stopListening,
               icon: const Icon(Icons.stop),
-              label: const Text('Stop Scanning'),
+              label: Text(l10n.stopListening),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
                 backgroundColor: Colors.red,
@@ -416,7 +442,7 @@ class _NfcPageState extends State<NfcPage> {
         OutlinedButton.icon(
           onPressed: _checkNfcStatus,
           icon: const Icon(Icons.refresh),
-          label: const Text('Refresh Status'),
+          label: Text(l10n.status),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.all(16),
           ),
@@ -452,34 +478,32 @@ class _NfcPageState extends State<NfcPage> {
   }
 
   Widget _buildTipsCard() {
-    return const Card(
+    final l10n = AppLocalizations.of(context);
+
+    return Card(
       color: Colors.blue,
       child: Padding(
-        padding: EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.info, color: Colors.white),
-                SizedBox(width: 8),
+                const Icon(Icons.info, color: Colors.white),
+                const SizedBox(width: 8),
                 Text(
-                  'Tips',
-                  style: TextStyle(
+                  l10n.tips,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              '• Enable NFC in device settings\n'
-              '• Hold NFC card close to the device\n'
-              '• Card will be read automatically\n'
-              '• Tap history items to view details\n'
-              '• Supported: Crane 1, Swan 1/2, Swift 1/2, etc.',
-              style: TextStyle(color: Colors.white),
+              l10n.nfcTips,
+              style: const TextStyle(color: Colors.white),
             ),
           ],
         ),

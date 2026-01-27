@@ -37,11 +37,10 @@ class ScaleData {
   }
 }
 
-
 class IminScale {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
   static const EventChannel _eventChannel =
-      EventChannel('com.imin.hardware/scale');
+      EventChannel('imin_hardware_plugin/scale');
 
   static Future<bool> connect({
     String devicePath = '/dev/ttyS4',

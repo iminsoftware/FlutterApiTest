@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+import '../l10n/app_localizations.dart';
 
 class CashBoxPage extends StatefulWidget {
   const CashBoxPage({super.key});
@@ -11,14 +12,20 @@ class CashBoxPage extends StatefulWidget {
 
 class _CashBoxPageState extends State<CashBoxPage> {
   bool _isOpen = false;
-  String _statusMessage = 'Ready';
+  String _statusMessage = '';
   CashBoxVoltage _selectedVoltage = CashBoxVoltage.v12;
   Timer? _statusTimer;
 
   @override
   void initState() {
     super.initState();
-    _startStatusPolling();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        _statusMessage = l10n.ready;
+      });
+      _startStatusPolling();
+    });
   }
 
   @override
@@ -50,13 +57,14 @@ class _CashBoxPageState extends State<CashBoxPage> {
   }
 
   Future<void> _openCashBox() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminCashBox.open();
       if (mounted) {
         setState(() {
-          _statusMessage = success
-              ? 'Cash box opened successfully'
-              : 'Failed to open cash box';
+          _statusMessage =
+              success ? l10n.cashBoxOpened : l10n.failedToOpenCashBox;
         });
       }
       // 立即检查状态
@@ -64,26 +72,28 @@ class _CashBoxPageState extends State<CashBoxPage> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
   }
 
   Future<void> _setVoltage() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final success = await IminCashBox.setVoltage(_selectedVoltage);
       if (mounted) {
         setState(() {
           _statusMessage = success
-              ? 'Voltage set to ${_selectedVoltage.value}'
-              : 'Failed to set voltage';
+              ? '${l10n.voltageSet} ${_selectedVoltage.value}V'
+              : l10n.failedToSetVoltage;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _statusMessage = 'Error: $e';
+          _statusMessage = '${l10n.error}: $e';
         });
       }
     }
@@ -91,10 +101,12 @@ class _CashBoxPageState extends State<CashBoxPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Cash Box Control'),
+        title: Text(l10n.cashBox),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -109,7 +121,7 @@ class _CashBoxPageState extends State<CashBoxPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Cash Box Status',
+                      l10n.cashBoxStatus,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
@@ -126,7 +138,7 @@ class _CashBoxPageState extends State<CashBoxPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _isOpen ? 'OPEN' : 'CLOSED',
+                                _isOpen ? l10n.open : l10n.closed,
                                 style: Theme.of(context)
                                     .textTheme
                                     .headlineSmall
@@ -138,7 +150,7 @@ class _CashBoxPageState extends State<CashBoxPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Status updates every second',
+                                l10n.statusUpdatesEverySecond,
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                             ],
@@ -160,7 +172,7 @@ class _CashBoxPageState extends State<CashBoxPage> {
             ElevatedButton.icon(
               onPressed: _openCashBox,
               icon: const Icon(Icons.point_of_sale),
-              label: const Text('Open Cash Box'),
+              label: Text(l10n.openCashBox),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
                 backgroundColor: Colors.green,
@@ -171,7 +183,7 @@ class _CashBoxPageState extends State<CashBoxPage> {
 
             // Voltage Settings
             Text(
-              'Voltage Settings',
+              l10n.voltageSettings,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -181,9 +193,9 @@ class _CashBoxPageState extends State<CashBoxPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Select voltage for cash box:',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                    Text(
+                      l10n.selectVoltage,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
                     RadioListTile<CashBoxVoltage>(
@@ -230,7 +242,7 @@ class _CashBoxPageState extends State<CashBoxPage> {
             ElevatedButton.icon(
               onPressed: _setVoltage,
               icon: const Icon(Icons.settings),
-              label: Text('Set Voltage to ${_selectedVoltage.value}'),
+              label: Text('${l10n.setVoltageTo} ${_selectedVoltage.value}V'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.all(16),
               ),
@@ -238,33 +250,30 @@ class _CashBoxPageState extends State<CashBoxPage> {
             const SizedBox(height: 24),
 
             // Tips
-            const Card(
+            Card(
               color: Colors.blue,
               child: Padding(
-                padding: EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info, color: Colors.white),
-                        SizedBox(width: 8),
+                        const Icon(Icons.info, color: Colors.white),
+                        const SizedBox(width: 8),
                         Text(
-                          'Tips',
-                          style: TextStyle(
+                          l10n.tips,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
-                      '• Connect a cash drawer to test\n'
-                      '• Status updates automatically every second\n'
-                      '• Set voltage according to your cash drawer specs\n'
-                      '• Common voltage: 12V (default)',
-                      style: TextStyle(color: Colors.white),
+                      l10n.cashBoxTips,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ],
                 ),

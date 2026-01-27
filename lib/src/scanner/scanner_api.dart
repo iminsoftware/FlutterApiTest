@@ -11,9 +11,9 @@ import 'package:flutter/services.dart';
 /// Note: This is for hardware scan heads, not camera-based scanning.
 /// For camera scanning, see [IminCameraScan].
 class IminScanner {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
   static const EventChannel _eventChannel =
-      EventChannel('com.imin.hardware/scanner');
+      EventChannel('imin_hardware_plugin/scanner');
 
   /// Configure custom broadcast parameters (optional)
   ///

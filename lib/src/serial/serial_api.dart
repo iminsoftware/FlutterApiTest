@@ -24,9 +24,9 @@ import 'package:flutter/services.dart';
 /// await IminSerial.close();
 /// ```
 class IminSerial {
-  static const MethodChannel _channel = MethodChannel('com.imin.hardware');
+  static const MethodChannel _channel = MethodChannel('imin_hardware_plugin');
   static const EventChannel _eventChannel =
-      EventChannel('com.imin.hardware/serial');
+      EventChannel('imin_hardware_plugin/serial');
 
   /// Open serial port
   ///
