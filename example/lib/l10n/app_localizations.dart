@@ -128,6 +128,22 @@ class AppLocalizations {
       ? '权限已授予'
       : 'Display permission granted successfully';
 
+  // 权限对话框
+  String get displayPermissionRequired =>
+      locale.languageCode == 'zh' ? '需要显示权限' : 'Display Permission Required';
+  String get displayPermissionMessage => locale.languageCode == 'zh'
+      ? '此应用需要权限才能在副屏上显示内容。请在下一个屏幕中授予"显示在其他应用上层"权限。'
+      : 'This app needs permission to display content on the secondary screen. Please grant "Display over other apps" permission in the next screen.';
+  String get cancel => locale.languageCode == 'zh' ? '取消' : 'Cancel';
+  String get continueText => locale.languageCode == 'zh' ? '继续' : 'Continue';
+  String get permissionDenied =>
+      locale.languageCode == 'zh' ? '权限被拒绝' : 'Permission Denied';
+  String get permissionDeniedMessage => locale.languageCode == 'zh'
+      ? '权限被拒绝。某些功能可能无法正常工作。您可以在应用设置中手动授予权限。'
+      : 'The permission was denied. Some features may not work properly. You can grant the permission manually in app settings.';
+  String get openSettings =>
+      locale.languageCode == 'zh' ? '打开设置' : 'Open Settings';
+
   // 通用按钮和状态
   String get status => locale.languageCode == 'zh' ? '状态' : 'Status';
   String get checking => locale.languageCode == 'zh' ? '检查中...' : 'Checking...';

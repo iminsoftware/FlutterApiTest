@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../l10n/app_localizations.dart';
 
 /// Permission helper for managing app permissions
 class PermissionHelper {
@@ -17,12 +18,11 @@ class PermissionHelper {
 
     // Show explanation dialog
     if (context.mounted) {
+      final l10n = AppLocalizations.of(context);
       final shouldRequest = await _showPermissionDialog(
         context,
-        title: 'Display Permission Required',
-        message:
-            'This app needs permission to display content on the secondary screen. '
-            'Please grant "Display over other apps" permission in the next screen.',
+        title: l10n.displayPermissionRequired,
+        message: l10n.displayPermissionMessage,
       );
 
       if (!shouldRequest) {
@@ -59,6 +59,7 @@ class PermissionHelper {
     required String title,
     required String message,
   }) async {
+    final l10n = AppLocalizations.of(context);
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -67,11 +68,11 @@ class PermissionHelper {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Continue'),
+                child: Text(l10n.continueText),
               ),
             ],
           ),
@@ -81,25 +82,23 @@ class PermissionHelper {
 
   /// Show permission denied dialog
   static Future<void> _showPermissionDeniedDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Permission Denied'),
-        content: const Text(
-          'The permission was denied. Some features may not work properly. '
-          'You can grant the permission manually in app settings.',
-        ),
+        title: Text(l10n.permissionDenied),
+        content: Text(l10n.permissionDeniedMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               openAppSettings();
             },
-            child: const Text('Open Settings'),
+            child: Text(l10n.openSettings),
           ),
         ],
       ),
