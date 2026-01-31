@@ -1,5 +1,6 @@
 package com.imin.hardware.device
 
+import android.os.Build
 import android.util.Log
 import com.imin.library.SystemPropManager
 import io.flutter.plugin.common.MethodCall
@@ -73,6 +74,28 @@ class DeviceInfoHandler : MethodChannel.MethodCallHandler {
                         "serialNumber" to "Unknown",
                         "deviceName" to "Unknown"
                     ))
+                }
+            }
+            "device.getAndroidVersion" -> {
+                try {
+                    // 返回 Android SDK 版本号
+                    // Android 11 = API 30
+                    // Android 13 = API 33
+                    val sdkInt = Build.VERSION.SDK_INT
+                    result.success(sdkInt)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to get Android version", e)
+                    result.error("ERROR", "Failed to get Android version: ${e.message}", null)
+                }
+            }
+            "device.getAndroidVersionName" -> {
+                try {
+                    // 返回 Android 版本名称，如 "11", "13"
+                    val versionName = Build.VERSION.RELEASE
+                    result.success(versionName)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to get Android version name", e)
+                    result.error("ERROR", "Failed to get Android version name: ${e.message}", null)
                 }
             }
             else -> result.notImplemented()

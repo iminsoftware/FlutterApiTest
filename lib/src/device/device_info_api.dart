@@ -105,4 +105,36 @@ class IminDeviceInfo {
       );
     }
   }
+
+  /// 获取 Android SDK 版本号
+  ///
+  /// 返回值示例：
+  /// - Android 11 = 30
+  /// - Android 13 = 33
+  /// - Android 14 = 34
+  static Future<int> getAndroidVersion() async {
+    try {
+      final result =
+          await _channel.invokeMethod<int>('device.getAndroidVersion');
+      return result ?? 30; // 默认返回 Android 11
+    } catch (e) {
+      return 30; // 默认返回 Android 11
+    }
+  }
+
+  /// 获取 Android 版本名称
+  ///
+  /// 返回值示例：
+  /// - "11"
+  /// - "13"
+  /// - "14"
+  static Future<String> getAndroidVersionName() async {
+    try {
+      final result =
+          await _channel.invokeMethod<String>('device.getAndroidVersionName');
+      return result ?? '11';
+    } catch (e) {
+      return '11';
+    }
+  }
 }
