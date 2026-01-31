@@ -26,6 +26,17 @@ class _ScalePageState extends State<ScalePage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // 自动连接服务
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _connect();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _subscription?.cancel();
     if (_isConnected) {

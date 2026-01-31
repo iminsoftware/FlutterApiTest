@@ -8,6 +8,7 @@ import 'pages/nfc_page.dart';
 import 'pages/scanner_page.dart';
 import 'pages/msr_page.dart';
 import 'pages/scale_page.dart';
+import 'pages/scale_new_page.dart';
 import 'pages/serial_page.dart';
 import 'pages/rfid_page.dart';
 import 'pages/segment_page.dart';
@@ -225,10 +226,25 @@ class _HomePageState extends State<HomePage> {
             icon: Icons.scale,
             title: l10n.scale,
             subtitle: l10n.scaleDesc,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ScalePage()),
-            ),
+            onTap: () async {
+              // 获取 Android 版本并跳转到对应页面
+              final androidVersion = await IminDeviceInfo.getAndroidVersion();
+              if (!mounted) return;
+
+              if (androidVersion >= 33) {
+                // Android 13+ 使用新版电子秤 SDK
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScaleNewPage()),
+                );
+              } else {
+                // Android 11- 使用旧版串口电子秤
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScalePage()),
+                );
+              }
+            },
           ),
 
           _buildFeatureButton(

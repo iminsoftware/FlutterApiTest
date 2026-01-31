@@ -23,6 +23,7 @@ export 'src/msr/msr_api.dart';
 
 // Scale
 export 'src/scale/scale_api.dart';
+export 'src/scale/scale_new_api.dart';
 
 // Serial
 export 'src/serial/serial_api.dart';

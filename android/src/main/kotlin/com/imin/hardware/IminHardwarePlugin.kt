@@ -17,6 +17,7 @@ import com.imin.hardware.nfc.NfcHandler
 import com.imin.hardware.scanner.ScannerHandler
 import com.imin.hardware.msr.MsrHandler
 import com.imin.hardware.scale.ScaleHandler
+import com.imin.hardware.scale.ScaleNewHandler
 import com.imin.hardware.serial.SerialHandler
 import com.imin.hardware.rfid.RfidHandler
 import com.imin.hardware.segment.SegmentHandler
@@ -31,6 +32,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private lateinit var scannerEventChannel: EventChannel
   private lateinit var msrEventChannel: EventChannel
   private lateinit var scaleEventChannel: EventChannel
+  private lateinit var scaleNewEventChannel: EventChannel
   private lateinit var serialEventChannel: EventChannel
   private lateinit var rfidTagEventChannel: EventChannel
   private lateinit var rfidConnectionEventChannel: EventChannel
@@ -46,6 +48,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   private var scannerHandler: ScannerHandler? = null
   private var msrHandler: MsrHandler? = null
   private var scaleHandler: ScaleHandler? = null
+  private var scaleNewHandler: ScaleNewHandler? = null
   private var serialHandler: SerialHandler? = null
   private var rfidHandler: RfidHandler? = null
   private var segmentHandler: SegmentHandler? = null
@@ -62,6 +65,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     scannerEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/scanner")
     msrEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/msr")
     scaleEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/scale")
+    scaleNewEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/scale_new")
     serialEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/serial")
     rfidTagEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/rfid_tag")
     rfidConnectionEventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "imin_hardware_plugin/rfid_connection")
@@ -82,6 +86,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       call.method.startsWith("scanner.") -> scannerHandler?.handle(call, result)
       call.method.startsWith("msr.") -> msrHandler?.handle(call, result)
       call.method.startsWith("scale.") -> scaleHandler?.handle(call, result)
+      call.method.startsWith("scaleNew.") -> scaleNewHandler?.handle(call, result)
       call.method.startsWith("serial.") -> serialHandler?.handle(call, result)
       call.method.startsWith("rfid.") -> rfidHandler?.handle(call, result)
       call.method.startsWith("segment.") -> segmentHandler?.handle(call, result)
@@ -151,6 +156,10 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       }
     })
     
+    // Initialize Scale New Handler (Android 13+)
+    scaleNewHandler = ScaleNewHandler(activity.applicationContext, scaleNewEventChannel)
+    scaleNewEventChannel.setStreamHandler(scaleNewHandler)
+    
     // Initialize RFID Handler with EventChannels
     rfidHandler = RfidHandler(activity.applicationContext, activity)
     rfidTagEventChannel.setStreamHandler(rfidHandler)
@@ -175,6 +184,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     scannerHandler?.cleanup()
     msrHandler?.cleanup()
     scaleHandler?.cleanup()
+    scaleNewHandler?.cleanup()
     serialHandler?.cleanup()
     rfidHandler?.dispose()
     segmentHandler?.cleanup()
@@ -188,6 +198,7 @@ class IminHardwarePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     scannerHandler = null
     msrHandler = null
     scaleHandler = null
+    scaleNewHandler = null
     serialHandler = null
     rfidHandler = null
     segmentHandler = null
