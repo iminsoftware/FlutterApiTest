@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android 11+ package visibility for iMin services -->
+    <queries>
+        <package android:name="com.imin.peripherservice" />
+    </queries>
+    
     <!-- Display permissions -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.INTERNET"/>
