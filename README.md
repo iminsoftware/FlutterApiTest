@@ -1,21 +1,22 @@
 # iMin Hardware Plugin
 
-A Flutter plugin for controlling iMin POS device hardware features including secondary display, scanner, NFC, RFID, and more.
+A comprehensive Flutter plugin for controlling iMin POS device hardware features including printer, display, cashbox, light, NFC, RFID, scanner, MSR, electronic scale, serial port, segment display, floating window, and camera scanning.
 
 ## Features
 
-- ✅ **Secondary Display Control** - Show text, images, and videos on secondary display
-- ✅ **Cash Box** - Cash drawer control with voltage settings
-- ✅ **Light Control** - USB LED indicator lights (red/green)
-- ✅ **NFC Reader** - NFC card reading with real-time tag stream
-- ✅ **Scanner** - Hardware barcode/QR code scanner
-- ✅ **MSR** - Magnetic stripe card reader
-- ✅ **Electronic Scale** - Serial port weight measurement
-- ✅ **Serial Port** - Serial communication
-- ✅ **Segment Display** - USB digital tube display
-- ✅ **Floating Window** - System floating window overlay
-- ✅ **Camera Scan** - Camera-based barcode/QR code scanning (ZXing)
-- ✅ **RFID** - RFID tag read/write (Basic implementation)
+- 🖨️ **Printer** - Print text, images, barcodes, QR codes, and labels
+- 📺 **Secondary Display** - Show text, images, and videos on customer display
+- 💰 **Cash Box** - Cash drawer control with voltage settings
+- 💡 **Light Control** - USB LED indicator lights (red/green)
+- 💳 **NFC Reader** - NFC card reading with real-time tag stream
+- 📷 **Scanner** - Hardware barcode/QR code scanner
+- 💳 **MSR** - Magnetic stripe card reader
+- ⚖️ **Electronic Scale** - Weight measurement and pricing (Android 13+)
+- 🔌 **Serial Port** - Serial communication
+- 🔢 **Segment Display** - USB digital tube display
+- 🪟 **Floating Window** - System floating window overlay
+- 📸 **Camera Scan** - Camera-based barcode/QR code scanning (ZXing)
+- 📡 **RFID** - RFID tag read/write
 
 ## Supported Devices
 
@@ -24,17 +25,94 @@ A Flutter plugin for controlling iMin POS device hardware features including sec
 - iMin Swift 1/2/2 Ultra
 - iMin Lark 1
 - iMin Falcon 2
-- iMin D4
+- iMin D4 series
 - iMin M2-Pro
 
 ## Installation
+
+### Method 1: Using Git Dependency (Recommended)
 
 Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
   imin_hardware_plugin:
-    path: ../imin_hardware_plugin
+    git:
+      url: https://github.com/iminsoftware/FlutterApiTest.git
+      ref: v1.0.0  # Use specific version tag
+```
+
+Then run:
+
+```bash
+flutter pub get
+```
+
+### Method 2: Using pub.dev (When available)
+
+```yaml
+dependencies:
+  imin_hardware_plugin: ^1.0.0
+```
+
+### Method 3: Using Local Path
+
+```yaml
+dependencies:
+  imin_hardware_plugin:
+    path: ../FlutterApiTest
+```
+
+For detailed installation instructions, see [GIT_DEPENDENCY_GUIDE.md](GIT_DEPENDENCY_GUIDE.md)
+
+## Quick Start
+
+### Printer Example
+
+```dart
+import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+
+// Initialize printer
+await IminPrinter.initPrinter();
+
+// Print text
+await IminPrinter.printText("Hello World");
+
+// Print and feed paper
+await IminPrinter.printAndFeedPaper(100);
+```
+
+### Scanner Example
+
+```dart
+// Start scanning
+IminScanner.startScan();
+
+// Listen to scan results
+IminScanner.scanStream.listen((barcode) {
+  print('Scanned: $barcode');
+});
+
+// Stop scanning
+IminScanner.stopScan();
+```
+
+### Electronic Scale Example (Android 13+)
+
+```dart
+// Connect to scale service
+await IminScaleNew.connectService();
+
+// Start getting weight data
+await IminScaleNew.getData();
+
+// Listen to weight events
+IminScaleNew.eventStream.listen((event) {
+  if (event.isWeight) {
+    final data = event.data as ScaleWeightData;
+    print('Weight: ${data.net}kg');
+  }
+});
 ```
 
 ## Usage
