@@ -1,323 +1,116 @@
 # iMin Hardware Plugin
 
-A comprehensive Flutter plugin for controlling iMin POS device hardware features including printer, display, cashbox, light, NFC, RFID, scanner, MSR, electronic scale, serial port, segment display, floating window, and camera scanning.
+[![pub package](https://img.shields.io/pub/v/imin_hardware_plugin.svg)](https://pub.dev/packages/imin_hardware_plugin)
+[![GitHub](https://img.shields.io/github/stars/iminsoftware/FlutterApiTest?style=social)](https://github.com/iminsoftware/FlutterApiTest)
+
+[English](README.md) | [中文文档](README_CN.md)
+
+A comprehensive Flutter plugin for controlling iMin POS device hardware features.
 
 ## Features
 
-- 🖨️ **Printer** - Print text, images, barcodes, QR codes, and labels
-- 📺 **Secondary Display** - Show text, images, and videos on customer display
-- 💰 **Cash Box** - Cash drawer control with voltage settings
-- 💡 **Light Control** - USB LED indicator lights (red/green)
-- 💳 **NFC Reader** - NFC card reading with real-time tag stream
-- 📷 **Scanner** - Hardware barcode/QR code scanner
-- 💳 **MSR** - Magnetic stripe card reader
-- ⚖️ **Electronic Scale** - Weight measurement and pricing (Android 13+)
-- 🔌 **Serial Port** - Serial communication
-- 🔢 **Segment Display** - USB digital tube display
-- 🪟 **Floating Window** - System floating window overlay
-- 📸 **Camera Scan** - Camera-based barcode/QR code scanning (ZXing)
-- 📡 **RFID** - RFID tag read/write
+| Module | Description |
+|--------|-------------|
+| 📺 Display | Secondary display control |
+| 💰 Cashbox | Cash drawer control |
+| 💡 Light | LED indicator lights |
+| 💳 NFC | NFC card reading |
+| 📷 Scanner | Barcode/QR code scanner |
+| 💳 MSR | Magnetic stripe reader |
+| ⚖️ Scale | Electronic scale (Android 13+) |
+| 🔌 Serial | Serial port communication |
+| 🔢 Segment | Digital tube display |
+| 🪟 Floating Window | Overlay window |
+| 📸 Camera | Camera-based scanning |
+| 📡 RFID | RFID tag operations |
+| 📱 Device | Device information |
 
 ## Supported Devices
 
-- iMin Crane 1
-- iMin Swan 1/2/3
-- iMin Swift 1/2/2 Ultra
-- iMin Lark 1
-- iMin Falcon 2
-- iMin D4 series
-- iMin M2-Pro
+iMin D4, M2-Pro, Swan, Swift, Crane, Lark, Falcon series
 
 ## Installation
-
-### Method 1: Using Git Dependency (Recommended)
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  imin_hardware_plugin:
-    git:
-      url: https://github.com/iminsoftware/FlutterApiTest.git
-      ref: v1.0.0  # Use specific version tag
-```
-
-Then run:
-
-```bash
-flutter pub get
-```
-
-### Method 2: Using pub.dev (When available)
 
 ```yaml
 dependencies:
   imin_hardware_plugin: ^1.0.0
 ```
 
-### Method 3: Using Local Path
-
-```yaml
-dependencies:
-  imin_hardware_plugin:
-    path: ../FlutterApiTest
+```bash
+flutter pub get
 ```
-
-For detailed installation instructions, see [GIT_DEPENDENCY_GUIDE.md](GIT_DEPENDENCY_GUIDE.md)
 
 ## Quick Start
 
-### Printer Example
-
 ```dart
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
 
-// Initialize printer
-await IminPrinter.initPrinter();
-
-// Print text
-await IminPrinter.printText("Hello World");
-
-// Print and feed paper
-await IminPrinter.printAndFeedPaper(100);
-```
-
-### Scanner Example
-
-```dart
-// Start scanning
+// Scanner
 IminScanner.startScan();
+IminScanner.scanStream.listen((code) => print('Scanned: $code'));
 
-// Listen to scan results
-IminScanner.scanStream.listen((barcode) {
-  print('Scanned: $barcode');
-});
+// NFC
+IminNfc.startNfc();
+IminNfc.nfcStream.listen((tag) => print('NFC: ${tag.id}'));
 
-// Stop scanning
-IminScanner.stopScan();
-```
-
-### Electronic Scale Example (Android 13+)
-
-```dart
-// Connect to scale service
+// Electronic Scale
 await IminScaleNew.connectService();
-
-// Start getting weight data
 await IminScaleNew.getData();
-
-// Listen to weight events
 IminScaleNew.eventStream.listen((event) {
-  if (event.isWeight) {
-    final data = event.data as ScaleWeightData;
-    print('Weight: ${data.net}kg');
-  }
+  if (event.isWeight) print('Weight: ${event.data.net}kg');
 });
 ```
 
-## Usage
+## Documentation
 
-### Secondary Display
+### 📖 Complete Guides
 
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
+- [Display Module](docs/DISPLAY_EN.md) - Secondary display control
+- [Cashbox Module](docs/CASHBOX_EN.md) - Cash drawer operations
+- [Light Module](docs/LIGHT_EN.md) - LED indicator control
+- [NFC Module](docs/NFC_EN.md) - NFC card reading
+- [Scanner Module](docs/SCANNER_EN.md) - Barcode scanning
+- [MSR Module](docs/MSR_EN.md) - Magnetic stripe reader
+- [Scale Module](docs/SCALE_EN.md) - Electronic scale
+- [Serial Module](docs/SERIAL_EN.md) - Serial communication
+- [Segment Module](docs/SEGMENT_EN.md) - Digital display
+- [Floating Window Module](docs/FLOATING_WINDOW_EN.md) - Overlay window
+- [Camera Module](docs/CAMERA_EN.md) - Camera scanning
+- [RFID Module](docs/RFID_EN.md) - RFID operations
+- [Device Module](docs/DEVICE_EN.md) - Device information
 
-// Check if secondary display is available
-bool available = await IminDisplay.isAvailable();
+## Example App
 
-// Enable secondary display
-bool success = await IminDisplay.enable();
+See [example](example/) directory for complete demo application.
 
-// Show text
-await IminDisplay.showText('Hello, Secondary Display!');
+## Requirements
 
-// Show image
-await IminDisplay.showImage('/path/to/image.png');
-
-// Play video
-await IminDisplay.playVideo('/path/to/video.mp4');
-
-// Clear display
-await IminDisplay.clear();
-
-// Disable display
-await IminDisplay.disable();
-```
-
-### Cash Box
-
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-
-// Open cash box
-bool success = await IminCashBox.open();
-
-// Get cash box status
-bool isOpen = await IminCashBox.getStatus();
-
-// Set voltage (9V, 12V, or 24V)
-bool success = await IminCashBox.setVoltage(CashBoxVoltage.v12);
-```
-
-### Light Control
-
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-
-// Connect to light device
-bool connected = await IminLight.connect();
-
-// Turn on green light (success/ready state)
-bool success = await IminLight.turnOnGreen();
-
-// Turn on red light (error/busy state)
-bool success = await IminLight.turnOnRed();
-
-// Turn off all lights
-bool success = await IminLight.turnOff();
-
-// Disconnect from device
-bool success = await IminLight.disconnect();
-```
-
-### NFC Reader
-
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-
-// Check if NFC is available
-bool available = await IminNfc.isAvailable();
-
-// Check if NFC is enabled
-bool enabled = await IminNfc.isEnabled();
-
-// Open NFC settings
-await IminNfc.openSettings();
-
-// Listen to NFC tag stream
-IminNfc.tagStream.listen((tag) {
-  print('NFC ID: ${tag.id}');
-  print('Formatted ID: ${tag.formattedId}'); // e.g., "1234 5678 90AB CDEF"
-  print('Content: ${tag.content}');
-  print('Technology: ${tag.technology}');
-  print('Timestamp: ${tag.timestamp}');
-});
-```
-
-### Scanner
-
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-
-// Configure scanner (optional)
-await IminScanner.configure(
-  action: 'com.imin.scanner.api.RESULT_ACTION',
-  dataKey: 'decode_data_str',
-);
-
-// Start listening
-await IminScanner.startListening();
-
-// Listen to scan events
-IminScanner.scanStream.listen((result) {
-  print('Scanned: ${result.data}');
-  print('Timestamp: ${result.timestamp}');
-});
-
-// Stop listening
-await IminScanner.stopListening();
-```
-
-### Floating Window
-
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-
-// Show floating window
-bool success = await FloatingWindowApi.show();
-
-// Update text
-await FloatingWindowApi.updateText('Hello, Floating Window!');
-
-// Set position
-await FloatingWindowApi.setPosition(100, 100);
-
-// Check if showing
-bool isShowing = await FloatingWindowApi.isShowing();
-
-// Hide floating window
-await FloatingWindowApi.hide();
-```
-
-### Camera Scan
-
-```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-
-// Quick scan (default formats)
-String result = await CameraScanApi.scanQuick();
-
-// Scan QR code only
-String qrCode = await CameraScanApi.scanQRCode();
-
-// Scan barcode only
-String barcode = await CameraScanApi.scanBarcode();
-
-// Custom scan with specific formats
-String customResult = await CameraScanApi.scan(
-  formats: [BarcodeFormat.qrCode, BarcodeFormat.code128],
-  prompt: 'Scan a code',
-);
-```
+- Flutter >=3.3.0
+- Dart >=3.0.0
+- Android minSdkVersion 21
+- iMin POS device
 
 ## Permissions
 
-### Android
-
-Add the following permissions to your `AndroidManifest.xml`:
+Add to `android/app/src/main/AndroidManifest.xml`:
 
 ```xml
-<!-- Display and floating window permissions -->
-<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-<uses-permission android:name="android.permission.INTERNET"/>
-
-<!-- USB permissions for light control and segment display -->
-<uses-feature android:name="android.hardware.usb.host" android:required="false"/>
-
-<!-- NFC permissions -->
+<uses-permission android:name="android.permission.BLUETOOTH" />
 <uses-permission android:name="android.permission.NFC" />
-<uses-feature android:name="android.hardware.nfc" android:required="false" />
-
-<!-- Camera permissions for camera scan -->
-<uses-permission android:name="android.permission.CAMERA"/>
-<uses-feature android:name="android.hardware.camera" android:required="false"/>
-<uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
-
-<!-- Activity configuration for NFC -->
-<activity
-    android:name=".MainActivity"
-    android:launchMode="singleTop">
-</activity>
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 ```
 
-**Notes:**
-- `SYSTEM_ALERT_WINDOW` - Required for secondary display overlay and floating window
-- `INTERNET` - Required for loading network images/videos on secondary display
-- `android.hardware.usb.host` - Required for USB light device control and segment display
-- `android.permission.NFC` - Required for NFC card reading
-- `android.hardware.nfc` - NFC hardware feature (optional)
-- `android.permission.CAMERA` - Required for camera-based scanning
-- `android:launchMode="singleTop"` - Required for NFC onNewIntent handling
-- For Android 6.0+, overlay permission needs to be requested at runtime (handled automatically)
+## Support
 
-## Example
-
-See the [example](example/) directory for a complete sample app.
-
-## Development
-
-See [DEVELOPMENT.md](DEVELOPMENT.md) for development documentation.
+- 📧 [GitHub Issues](https://github.com/iminsoftware/FlutterApiTest/issues)
+- 📖 [Documentation](https://pub.dev/packages/imin_hardware_plugin)
+- 🌐 [Website](https://www.imin.sg)
 
 ## License
 
-MIT License
+MIT License - see [LICENSE](LICENSE)
+
+---
+
+Made with ❤️ by [iMin Technology](https://www.imin.sg)

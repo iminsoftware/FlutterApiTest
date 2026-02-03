@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.0.1 - 2024-02-03
+
+### Documentation
+- ✅ 添加完整的 API 文档（英文 + 中文）
+- ✅ 13 个功能模块的详细文档
+- ✅ 每个模块包含：安装说明、导入方式、API 参考、示例代码
+- ✅ 添加文档索引 `docs/README.md`
+
+### Modules Documented
+- Display (副屏显示)
+- Cashbox (钱箱)
+- Light (LED 灯)
+- NFC (NFC 读卡)
+- Scanner (扫描器)
+- MSR (磁条卡)
+- Scale (电子秤)
+- Serial (串口)
+- Segment (数码管)
+- Floating Window (悬浮窗)
+- Camera (相机)
+- RFID
+- Device (设备信息)
+
+---
+
 ## 🎉 v1.0.0 - 2026-01-25 - **100% 完成度达成！**
 
 ### 项目里程碑
