@@ -65,19 +65,19 @@ IminScaleNew.eventStream.listen((event) {
 
 ### 📖 完整指南
 
-- [副屏显示模块](docs/DISPLAY_CN.md) - 副屏显示控制
-- [钱箱模块](docs/CASHBOX_CN.md) - 钱箱操作
-- [LED 灯模块](docs/LIGHT_CN.md) - LED 指示灯控制
-- [NFC 模块](docs/NFC_CN.md) - NFC 卡片读取
-- [扫描器模块](docs/SCANNER_CN.md) - 条码扫描
-- [MSR 模块](docs/MSR_CN.md) - 磁条卡读取
-- [电子秤模块](docs/SCALE_CN.md) - 电子秤称重
-- [串口模块](docs/SERIAL_CN.md) - 串口通信
-- [数码管模块](docs/SEGMENT_CN.md) - 数码管显示
-- [悬浮窗模块](docs/FLOATING_WINDOW_CN.md) - 悬浮窗口
-- [相机模块](docs/CAMERA_CN.md) - 相机扫描
-- [RFID 模块](docs/RFID_CN.md) - RFID 操作
-- [设备模块](docs/DEVICE_CN.md) - 设备信息
+- [副屏显示模块](doc/DISPLAY_CN.md) - 副屏显示控制
+- [钱箱模块](doc/CASHBOX_CN.md) - 钱箱操作
+- [LED 灯模块](doc/LIGHT_CN.md) - LED 指示灯控制
+- [NFC 模块](doc/NFC_CN.md) - NFC 卡片读取
+- [扫描器模块](doc/SCANNER_CN.md) - 条码扫描
+- [MSR 模块](doc/MSR_CN.md) - 磁条卡读取
+- [电子秤模块](doc/SCALE_CN.md) - 电子秤称重
+- [串口模块](doc/SERIAL_CN.md) - 串口通信
+- [数码管模块](doc/SEGMENT_CN.md) - 数码管显示
+- [悬浮窗模块](doc/FLOATING_WINDOW_CN.md) - 悬浮窗口
+- [相机模块](doc/CAMERA_CN.md) - 相机扫描
+- [RFID 模块](doc/RFID_CN.md) - RFID 操作
+- [设备模块](doc/DEVICE_CN.md) - 设备信息
 
 ## 示例应用
 

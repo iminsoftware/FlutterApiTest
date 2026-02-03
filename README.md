@@ -65,19 +65,19 @@ IminScaleNew.eventStream.listen((event) {
 
 ### 📖 Complete Guides
 
-- [Display Module](docs/DISPLAY_EN.md) - Secondary display control
-- [Cashbox Module](docs/CASHBOX_EN.md) - Cash drawer operations
-- [Light Module](docs/LIGHT_EN.md) - LED indicator control
-- [NFC Module](docs/NFC_EN.md) - NFC card reading
-- [Scanner Module](docs/SCANNER_EN.md) - Barcode scanning
-- [MSR Module](docs/MSR_EN.md) - Magnetic stripe reader
-- [Scale Module](docs/SCALE_EN.md) - Electronic scale
-- [Serial Module](docs/SERIAL_EN.md) - Serial communication
-- [Segment Module](docs/SEGMENT_EN.md) - Digital display
-- [Floating Window Module](docs/FLOATING_WINDOW_EN.md) - Overlay window
-- [Camera Module](docs/CAMERA_EN.md) - Camera scanning
-- [RFID Module](docs/RFID_EN.md) - RFID operations
-- [Device Module](docs/DEVICE_EN.md) - Device information
+- [Display Module](doc/DISPLAY_EN.md) - Secondary display control
+- [Cashbox Module](doc/CASHBOX_EN.md) - Cash drawer operations
+- [Light Module](doc/LIGHT_EN.md) - LED indicator control
+- [NFC Module](doc/NFC_EN.md) - NFC card reading
+- [Scanner Module](doc/SCANNER_EN.md) - Barcode scanning
+- [MSR Module](doc/MSR_EN.md) - Magnetic stripe reader
+- [Scale Module](doc/SCALE_EN.md) - Electronic scale
+- [Serial Module](doc/SERIAL_EN.md) - Serial communication
+- [Segment Module](doc/SEGMENT_EN.md) - Digital display
+- [Floating Window Module](doc/FLOATING_WINDOW_EN.md) - Overlay window
+- [Camera Module](doc/CAMERA_EN.md) - Camera scanning
+- [RFID Module](doc/RFID_EN.md) - RFID operations
+- [Device Module](doc/DEVICE_EN.md) - Device information
 
 ## Example App
 
