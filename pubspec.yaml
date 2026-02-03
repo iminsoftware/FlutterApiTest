@@ -30,13 +30,10 @@ flutter:
         package: com.imin.hardware
         pluginClass: IminHardwarePlugin
 
-# 主题标签（帮助用户搜索）
+# 主题标签（帮助用户搜索）- 最多 5 个
 topics:
   - pos
   - printer
-  - scanner
-  - nfc
-  - rfid
   - hardware
   - imin
-  - scale
+  - scanner
