@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.3 - 2026-02-25
+
+### Fixed
+- 🐛 **重要修复**：确保 `android/settings.gradle` 正确包含 `scanlibrary` 模块
+- ✅ 修复从 pub.dev 安装时的 "Project with path ':scanlibrary' could not be found" 错误
+- ✅ 验证发布包包含正确的配置文件
+
+### Notes
+- 1.0.2 版本的 settings.gradle 未正确打包，此版本已修复
+- 所有功能模块现在可以正常使用
+
+---
+
 ## 1.0.2 - 2026-02-25
 
 ### Fixed
