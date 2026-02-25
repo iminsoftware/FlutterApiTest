@@ -107,9 +107,9 @@ IminScaleNew.eventStream.listen((event) {
 - 📖 [文档](https://pub.dev/packages/imin_hardware_plugin)
 - 🌐 [官网](https://www.imin.sg)
 
-## 许可证
+## 📄 许可证
 
-MIT License - 查看 [LICENSE](LICENSE)
+BSD-3-Clause License - 查看 [LICENSE](LICENSE)
 
 ---
 

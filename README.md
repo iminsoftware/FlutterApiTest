@@ -107,9 +107,9 @@ Add to `android/app/src/main/AndroidManifest.xml`:
 - 📖 [Documentation](https://pub.dev/packages/imin_hardware_plugin)
 - 🌐 [Website](https://www.imin.sg)
 
-## License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE)
+BSD-3-Clause License - see [LICENSE](LICENSE)
 
 ---
 

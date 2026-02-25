@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.2 - 2026-02-25
+
+### Fixed
+- 🐛 修复 Android 构建配置：在 `settings.gradle` 中添加 `scanlibrary` 模块引用
+- 🐛 解决 "Project with path ':scanlibrary' could not be found" 错误
+- ✅ 确保相机扫码功能的依赖正确配置
+
+### Notes
+- 此版本修复了从 pub.dev 安装时的构建问题
+- 所有功能模块现在可以正常使用
+
+---
+
 ## 1.0.1 - 2024-02-03
 
 ### Documentation
