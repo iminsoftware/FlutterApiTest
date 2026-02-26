@@ -9,7 +9,8 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 
-import com.imin.scan.R;
+
+import com.imin.hardware.R;
 import com.imin.scan.util.LogUtils;
 
 import java.io.Closeable;
@@ -67,7 +68,7 @@ public final class BeepManager implements MediaPlayer.OnErrorListener, Closeable
     private MediaPlayer buildMediaPlayer(Context context) {
         MediaPlayer mediaPlayer = new MediaPlayer();
         try {
-            AssetFileDescriptor file = context.getResources().openRawResourceFd(playRaw == 0?R.raw.beep:playRaw);
+            AssetFileDescriptor file = context.getResources().openRawResourceFd(playRaw == 0? R.raw.beep:playRaw);
             mediaPlayer.setDataSource(file.getFileDescriptor(), file.getStartOffset(), file.getLength());
             mediaPlayer.setOnErrorListener(this);
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);

@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.camera.view.PreviewView;
 import androidx.fragment.app.FragmentActivity;
 
+import com.imin.hardware.R;
 import com.imin.scan.util.LogUtils;
 import com.imin.scan.util.PermissionUtils;
 @SuppressLint("NewApi")

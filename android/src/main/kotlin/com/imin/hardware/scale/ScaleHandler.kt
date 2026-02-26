@@ -128,6 +128,7 @@ class ScaleHandler(private val activity: Activity) : ElectronicCallback {
         try {
             electronic?.turnZero()
             Log.d(TAG, "Zero executed")
+
             result.success(true)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to zero", e)

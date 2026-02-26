@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.camera.view.PreviewView;
 import androidx.fragment.app.Fragment;
 
+import com.imin.hardware.R;
 import com.imin.scan.util.LogUtils;
 import com.imin.scan.util.PermissionUtils;
 

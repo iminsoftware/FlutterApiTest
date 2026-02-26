@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.4 - 2026-02-26
+
+### Changed
+- 🔧 **架构优化**：将 `scanlibrary` 模块合并到主模块中
+- ✅ 移除子模块依赖，简化项目结构
+- ✅ 所有扫码相关的 Java 源码和资源文件已整合到 `android/src/main`
+- ✅ 更新构建配置，添加 CameraX 和 AndroidX 依赖到主模块
+
+### Technical Details
+- 合并了 `com.imin.scan` 和 `com.imin.zxing` 包到主模块
+- 合并了扫码相关的资源文件（layouts, drawables, raw）
+- 移除了 `settings.gradle` 中的 `:scanlibrary` 引用
+- 更新了 `build.gradle` 依赖配置
+
+### Benefits
+- 🚀 彻底解决 pub.dev 安装时的子模块依赖问题
+- 📦 简化插件结构，更易于维护
+- ✅ 构建更稳定，无需额外配置
+
+---
+
 ## 1.0.3 - 2026-02-25
 
 ### Fixed
