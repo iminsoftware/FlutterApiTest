@@ -50,7 +50,7 @@ class PermissionHelper {
 
   /// Open app settings
   static Future<void> openAppSettings() async {
-    await openAppSettings();
+    await Permission.systemAlertWindow.request();
   }
 
   /// Show permission explanation dialog
