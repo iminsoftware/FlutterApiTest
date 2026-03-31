@@ -53,6 +53,12 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
     super.dispose();
   }
 
+  // Localization helper
+  String _t(String en, String zh) {
+    final locale = Localizations.localeOf(context);
+    return locale.languageCode == 'zh' ? zh : en;
+  }
+
   // 监听事件
   void _listenToEvents() {
     _eventSubscription = IminScaleNew.eventStream.listen((event) {
@@ -99,7 +105,10 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
     }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? '连接成功' : '连接失败')),
+        SnackBar(
+            content: Text(success
+                ? _t('Connected', '连接成功')
+                : _t('Connect failed', '连接失败'))),
       );
     }
   }
@@ -122,7 +131,10 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
     if (mounted) {
       setState(() => _isGettingData = success);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? '开始读取' : '读取失败')),
+        SnackBar(
+            content: Text(success
+                ? _t('Start reading', '开始读取')
+                : _t('Read failed', '读取失败'))),
       );
     }
   }
@@ -133,7 +145,9 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
     if (mounted) {
       setState(() => _isGettingData = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? '已停止' : '停止失败')),
+        SnackBar(
+            content: Text(
+                success ? _t('Stopped', '已停止') : _t('Stop failed', '停止失败'))),
       );
     }
   }
@@ -182,15 +196,17 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _isConnected ? '已连接' : '未连接',
+                  _isConnected
+                      ? _t('Connected', '已连接')
+                      : _t('Not Connected', '未连接'),
                   style: const TextStyle(
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text('服务版本: $_serviceVersion'),
-            Text('固件版本: $_firmwareVersion'),
+            Text('${_t('Service version', '服务版本')}: $_serviceVersion'),
+            Text('${_t('Firmware version', '固件版本')}: $_firmwareVersion'),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -198,7 +214,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                   child: ElevatedButton.icon(
                     onPressed: _isConnected ? null : _connectService,
                     icon: const Icon(Icons.link),
-                    label: const Text('连接服务'),
+                    label: Text(_t('Connect', '连接服务')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -207,7 +223,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                     onPressed:
                         !_isConnected || _isGettingData ? null : _startGetData,
                     icon: const Icon(Icons.play_arrow),
-                    label: const Text('开始读取'),
+                    label: Text(_t('Start', '开始读取')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -215,7 +231,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                   child: ElevatedButton.icon(
                     onPressed: !_isGettingData ? null : _stopGetData,
                     icon: const Icon(Icons.stop),
-                    label: const Text('停止读取'),
+                    label: Text(_t('Stop', '停止读取')),
                   ),
                 ),
               ],
@@ -234,38 +250,45 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '实时称重数据',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              _t('Real-time Weight Data', '实时称重数据'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const Divider(),
             if (_currentWeight != null) ...[
+              _buildDataRow(_t('Net', '净重'),
+                  '${_currentWeight!.net.toStringAsFixed(3)} kg'),
+              _buildDataRow(_t('Tare', '皮重'),
+                  '${_currentWeight!.tare.toStringAsFixed(3)} kg'),
               _buildDataRow(
-                  '净重', '${_currentWeight!.net.toStringAsFixed(3)} kg'),
-              _buildDataRow(
-                  '皮重', '${_currentWeight!.tare.toStringAsFixed(3)} kg'),
-              _buildDataRow(
-                '状态',
-                _currentWeight!.isStable ? '✓ 稳定' : '~ 浮动',
+                _t('Status', '状态'),
+                _currentWeight!.isStable
+                    ? _t('✓ Stable', '✓ 稳定')
+                    : _t('~ Unstable', '~ 浮动'),
                 color: _currentWeight!.isStable ? Colors.green : Colors.orange,
               ),
             ] else
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('暂无数据', style: TextStyle(color: Colors.grey)),
+                  padding: const EdgeInsets.all(16),
+                  child: Text(_t('No data', '暂无数据'),
+                      style: const TextStyle(color: Colors.grey)),
                 ),
               ),
             if (_currentStatus != null) ...[
               const Divider(),
-              if (_currentStatus!.isLightWeight) _buildWarning('⚠️ 过轻'),
-              if (_currentStatus!.overload) _buildWarning('⚠️ 过载'),
-              if (_currentStatus!.clearZeroErr) _buildWarning('❌ 清零错误'),
-              if (_currentStatus!.calibrationErr) _buildWarning('❌ 标定错误'),
+              if (_currentStatus!.isLightWeight)
+                _buildWarning(_t('⚠️ Underweight', '⚠️ 过轻')),
+              if (_currentStatus!.overload)
+                _buildWarning(_t('⚠️ Overload', '⚠️ 过载')),
+              if (_currentStatus!.clearZeroErr)
+                _buildWarning(_t('❌ Zero error', '❌ 清零错误')),
+              if (_currentStatus!.calibrationErr)
+                _buildWarning(_t('❌ Calibration error', '❌ 标定错误')),
             ],
             if (_errorCode != null) ...[
               const Divider(),
-              _buildWarning('错误码: $_errorCode'),
+              _buildWarning(_t('Error code: $_errorCode', '错误码: $_errorCode')),
             ],
           ],
         ),
@@ -313,9 +336,9 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '称重操作',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              _t('Weight Operations', '称重操作'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Row(
@@ -324,7 +347,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                   child: ElevatedButton.icon(
                     onPressed: _isConnected ? () => IminScaleNew.zero() : null,
                     icon: const Icon(Icons.exposure_zero),
-                    label: const Text('清零'),
+                    label: Text(_t('Zero', '清零')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -332,7 +355,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                   child: ElevatedButton.icon(
                     onPressed: _isConnected ? () => IminScaleNew.tare() : null,
                     icon: const Icon(Icons.scale),
-                    label: const Text('去皮'),
+                    label: Text(_t('Tare', '去皮')),
                   ),
                 ),
               ],
@@ -343,9 +366,9 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                 Expanded(
                   child: TextField(
                     controller: _digitalTareController,
-                    decoration: const InputDecoration(
-                      labelText: '数字去皮 (克)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: _t('Digital Tare (g)', '数字去皮 (克)'),
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -361,7 +384,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           }
                         }
                       : null,
-                  child: const Text('设置'),
+                  child: Text(_t('Set', '设置')),
                 ),
               ],
             ),
@@ -379,16 +402,17 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '价格计算',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              _t('Price Calculation', '价格计算'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             if (_currentPrice != null) ...[
-              _buildDataRow('单价', '¥${_currentPrice!.unitPrice}'),
-              _buildDataRow('总价', '¥${_currentPrice!.totalPrice}',
+              _buildDataRow(
+                  _t('Unit Price', '单价'), '¥${_currentPrice!.unitPrice}'),
+              _buildDataRow(_t('Total', '总价'), '¥${_currentPrice!.totalPrice}',
                   color: Colors.green),
-              _buildDataRow('单位', _currentPrice!.unitName),
+              _buildDataRow(_t('Unit', '单位'), _currentPrice!.unitName),
               const Divider(),
             ],
             Row(
@@ -396,9 +420,9 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                 Expanded(
                   child: TextField(
                     controller: _priceController,
-                    decoration: const InputDecoration(
-                      labelText: '单价 (元)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: _t('Unit Price', '单价 (元)'),
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
@@ -414,12 +438,13 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           }
                         }
                       : null,
-                  child: const Text('设置'),
+                  child: Text(_t('Set', '设置')),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text('重量单位:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(_t('Weight Unit:', '重量单位:'),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -488,9 +513,9 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '设备信息',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              _t('Device Info', '设备信息'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -505,13 +530,13 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('加速度数据'),
+                                title: Text(_t('Acceleration Data', '加速度数据')),
                                 content: Text(
                                     'X: ${data[0]}\nY: ${data[1]}\nZ: ${data[2]}'),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text('关闭'),
+                                    child: Text(_t('Close', '关闭')),
                                   ),
                                 ],
                               ),
@@ -520,7 +545,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                         }
                       : null,
                   icon: const Icon(Icons.speed),
-                  label: const Text('加速度'),
+                  label: Text(_t('Acceleration', '加速度')),
                 ),
                 ElevatedButton.icon(
                   onPressed: _isConnected
@@ -529,15 +554,16 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text('铅封状态: ${state == 0 ? "正常" : "被破坏"}'),
+                                content: Text(_t(
+                                    'Seal status: ${state == 0 ? "Normal" : "Broken"}',
+                                    '铅封状态: ${state == 0 ? "正常" : "被破坏"}')),
                               ),
                             );
                           }
                         }
                       : null,
                   icon: const Icon(Icons.security),
-                  label: const Text('铅封状态'),
+                  label: Text(_t('Seal Status', '铅封状态')),
                 ),
                 ElevatedButton.icon(
                   onPressed: _isConnected
@@ -546,15 +572,16 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text('标定按钮: ${status == 0 ? "未按下" : "按下"}'),
+                                content: Text(_t(
+                                    'Cal button: ${status == 0 ? "Not pressed" : "Pressed"}',
+                                    '标定按钮: ${status == 0 ? "未按下" : "按下"}')),
                               ),
                             );
                           }
                         }
                       : null,
                   icon: const Icon(Icons.tune),
-                  label: const Text('标定状态'),
+                  label: Text(_t('Cal Status', '标定状态')),
                 ),
                 ElevatedButton.icon(
                   onPressed: _isConnected
@@ -564,10 +591,10 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('秤参数信息'),
+                                title: Text(_t('Scale Parameters', '秤参数信息')),
                                 content: Text(
                                   info.isEmpty
-                                      ? '无数据'
+                                      ? _t('No data', '无数据')
                                       : info
                                           .map((e) => '${e[0]}/${e[1]}')
                                           .join('\n'),
@@ -575,7 +602,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text('关闭'),
+                                    child: Text(_t('Close', '关闭')),
                                   ),
                                 ],
                               ),
@@ -584,7 +611,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                         }
                       : null,
                   icon: const Icon(Icons.info),
-                  label: const Text('秤参数'),
+                  label: Text(_t('Parameters', '秤参数')),
                 ),
                 ElevatedButton.icon(
                   onPressed: _isConnected
@@ -592,20 +619,21 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('重启电子秤'),
-                              content:
-                                  const Text('确定要重启电子秤吗？\n重启会重新读取零点，请谨慎操作。'),
+                              title: Text(_t('Restart Scale', '重启电子秤')),
+                              content: Text(_t(
+                                  'Are you sure?\nRestart will re-read zero point.',
+                                  '确定要重启电子秤吗？\n重启会重新读取零点，请谨慎操作。')),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('取消'),
+                                  child: Text(_t('Cancel', '取消')),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.pop(context);
                                     IminScaleNew.restart();
                                   },
-                                  child: const Text('确定'),
+                                  child: Text(_t('Confirm', '确定')),
                                 ),
                               ],
                             ),
@@ -613,7 +641,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                         }
                       : null,
                   icon: const Icon(Icons.restart_alt),
-                  label: const Text('重启'),
+                  label: Text(_t('Restart', '重启')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
@@ -638,9 +666,10 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '操作历史',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  _t('History', '操作历史'),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 TextButton.icon(
                   onPressed: _history.isEmpty
@@ -649,16 +678,17 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           setState(() => _history.clear());
                         },
                   icon: const Icon(Icons.clear_all),
-                  label: const Text('清空'),
+                  label: Text(_t('Clear', '清空')),
                 ),
               ],
             ),
             const Divider(),
             if (_history.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('暂无记录', style: TextStyle(color: Colors.grey)),
+                  padding: const EdgeInsets.all(16),
+                  child: Text(_t('No history', '暂无记录'),
+                      style: const TextStyle(color: Colors.grey)),
                 ),
               )
             else

@@ -39,8 +39,16 @@ class CameraScanHandler(
         try {
             pendingResult = result
             
-            // Start FlutterCaptureActivity
-            val intent = Intent(activity, FlutterCaptureActivity::class.java)
+            // Start FlutterCaptureActivity with parameters
+            val intent = Intent(activity, FlutterCaptureActivity::class.java).apply {
+                putExtra("useFlash", call.argument<Boolean>("useFlash") ?: false)
+                putExtra("beepEnabled", call.argument<Boolean>("beepEnabled") ?: true)
+                putExtra("timeout", call.argument<Int>("timeout") ?: 0)
+                val formats = call.argument<List<String>>("formats")
+                if (formats != null && formats.isNotEmpty()) {
+                    putExtra("formats", ArrayList(formats))
+                }
+            }
             activity.startActivityForResult(intent, REQUEST_CODE_SCAN)
         } catch (e: Exception) {
             pendingResult = null

@@ -29,6 +29,12 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
     super.dispose();
   }
 
+  // Localization helper
+  String _t(String en, String zh) {
+    final locale = Localizations.localeOf(context);
+    return locale.languageCode == 'zh' ? zh : en;
+  }
+
   Future<void> _checkStatus() async {
     try {
       final isShowing = await FloatingWindowApi.isShowing();
@@ -36,7 +42,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
         _isShowing = isShowing;
       });
     } catch (e) {
-      _showMessage('检查状态失败: $e');
+      _showMessage(_t('Check status failed: $e', '检查状态失败: $e'));
     }
   }
 
@@ -47,12 +53,12 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
         setState(() {
           _isShowing = true;
         });
-        _showMessage('悬浮窗已显示');
+        _showMessage(_t('Floating window shown', '悬浮窗已显示'));
       } else {
-        _showMessage('显示悬浮窗失败，请检查权限');
+        _showMessage(_t('Failed to show, check permission', '显示悬浮窗失败，请检查权限'));
       }
     } catch (e) {
-      _showMessage('显示悬浮窗失败: $e');
+      _showMessage(_t('Show failed: $e', '显示悬浮窗失败: $e'));
     }
   }
 
@@ -63,12 +69,12 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
         setState(() {
           _isShowing = false;
         });
-        _showMessage('悬浮窗已隐藏');
+        _showMessage(_t('Floating window hidden', '悬浮窗已隐藏'));
       } else {
-        _showMessage('隐藏悬浮窗失败');
+        _showMessage(_t('Failed to hide', '隐藏悬浮窗失败'));
       }
     } catch (e) {
-      _showMessage('隐藏悬浮窗失败: $e');
+      _showMessage(_t('Hide failed: $e', '隐藏悬浮窗失败: $e'));
     }
   }
 
@@ -76,12 +82,12 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
     try {
       final success = await FloatingWindowApi.updateText(_textController.text);
       if (success) {
-        _showMessage('文本已更新');
+        _showMessage(_t('Text updated', '文本已更新'));
       } else {
-        _showMessage('更新文本失败');
+        _showMessage(_t('Update text failed', '更新文本失败'));
       }
     } catch (e) {
-      _showMessage('更新文本失败: $e');
+      _showMessage(_t('Update text failed: $e', '更新文本失败: $e'));
     }
   }
 
@@ -92,12 +98,14 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
         _yPosition.toInt(),
       );
       if (success) {
-        _showMessage('位置已更新: (${_xPosition.toInt()}, ${_yPosition.toInt()})');
+        _showMessage(_t(
+            'Position updated: (${_xPosition.toInt()}, ${_yPosition.toInt()})',
+            '位置已更新: (${_xPosition.toInt()}, ${_yPosition.toInt()})'));
       } else {
-        _showMessage('更新位置失败');
+        _showMessage(_t('Update position failed', '更新位置失败'));
       }
     } catch (e) {
-      _showMessage('更新位置失败: $e');
+      _showMessage(_t('Update position failed: $e', '更新位置失败: $e'));
     }
   }
 
@@ -128,7 +136,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '状态',
+                    _t('Status', '状态'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
@@ -140,7 +148,9 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        _isShowing ? '悬浮窗已显示' : '悬浮窗已隐藏',
+                        _isShowing
+                            ? _t('Floating window shown', '悬浮窗已显示')
+                            : _t('Floating window hidden', '悬浮窗已隐藏'),
                         style: TextStyle(
                           color: _isShowing ? Colors.green : Colors.grey,
                           fontWeight: FontWeight.bold,
@@ -162,7 +172,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '控制',
+                    _t('Control', '控制'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
@@ -172,7 +182,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                         child: ElevatedButton.icon(
                           onPressed: _isShowing ? null : _showFloatingWindow,
                           icon: const Icon(Icons.visibility),
-                          label: const Text('显示悬浮窗'),
+                          label: Text(_t('Show', '显示悬浮窗')),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -180,7 +190,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                         child: ElevatedButton.icon(
                           onPressed: _isShowing ? _hideFloatingWindow : null,
                           icon: const Icon(Icons.visibility_off),
-                          label: const Text('隐藏悬浮窗'),
+                          label: Text(_t('Hide', '隐藏悬浮窗')),
                         ),
                       ),
                     ],
@@ -199,16 +209,16 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '更新文本',
+                    _t('Update Text', '更新文本'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _textController,
-                    decoration: const InputDecoration(
-                      labelText: '悬浮窗文本',
-                      border: OutlineInputBorder(),
-                      hintText: '输入要显示的文本',
+                    decoration: InputDecoration(
+                      labelText: _t('Floating window text', '悬浮窗文本'),
+                      border: const OutlineInputBorder(),
+                      hintText: _t('Enter text to display', '输入要显示的文本'),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -217,7 +227,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                     child: ElevatedButton.icon(
                       onPressed: _isShowing ? _updateText : null,
                       icon: const Icon(Icons.update),
-                      label: const Text('更新文本'),
+                      label: Text(_t('Update Text', '更新文本')),
                     ),
                   ),
                 ],
@@ -234,11 +244,11 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '更新位置',
+                    _t('Update Position', '更新位置'),
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 16),
-                  Text('X 坐标: ${_xPosition.toInt()}'),
+                  Text('${_t('X coordinate', 'X 坐标')}: ${_xPosition.toInt()}'),
                   Slider(
                     value: _xPosition,
                     min: 0,
@@ -252,7 +262,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                     },
                   ),
                   const SizedBox(height: 8),
-                  Text('Y 坐标: ${_yPosition.toInt()}'),
+                  Text('${_t('Y coordinate', 'Y 坐标')}: ${_yPosition.toInt()}'),
                   Slider(
                     value: _yPosition,
                     min: 0,
@@ -271,7 +281,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                     child: ElevatedButton.icon(
                       onPressed: _isShowing ? _updatePosition : null,
                       icon: const Icon(Icons.my_location),
-                      label: const Text('更新位置'),
+                      label: Text(_t('Update Position', '更新位置')),
                     ),
                   ),
                 ],
@@ -293,7 +303,7 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                       Icon(Icons.info, color: Colors.blue.shade700),
                       const SizedBox(width: 8),
                       Text(
-                        '使用说明',
+                        _t('Instructions', '使用说明'),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.blue.shade700,
@@ -302,10 +312,14 @@ class _FloatingWindowPageState extends State<FloatingWindowPage> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text('1. 首次使用需要授予"显示在其他应用上层"权限'),
-                  const Text('2. 悬浮窗会在应用退出后继续显示'),
-                  const Text('3. 可以拖动悬浮窗改变位置'),
-                  const Text('4. 使用"隐藏悬浮窗"按钮关闭悬浮窗'),
+                  Text(_t(
+                      '1. First use requires "Display over other apps" permission',
+                      '1. 首次使用需要授予"显示在其他应用上层"权限')),
+                  Text(_t('2. Floating window persists after app exit',
+                      '2. 悬浮窗会在应用退出后继续显示')),
+                  Text(_t('3. Drag to change position', '3. 可以拖动悬浮窗改变位置')),
+                  Text(_t(
+                      '4. Use "Hide" button to close', '4. 使用"隐藏悬浮窗"按钮关闭悬浮窗')),
                 ],
               ),
             ),

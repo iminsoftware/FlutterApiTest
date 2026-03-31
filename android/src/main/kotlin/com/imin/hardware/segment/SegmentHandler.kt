@@ -56,9 +56,10 @@ class SegmentHandler(private val activity: Activity) {
         usbCommunication = UsbCommunication(activity)
         
         // 注册 USB 权限广播接收器
+        // 必须使用 RECEIVER_EXPORTED，因为 USB 权限广播由系统 UsbManager 发送
         val filter = IntentFilter(ACTION_USB_PERMISSION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            activity.registerReceiver(usbReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            activity.registerReceiver(usbReceiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             activity.registerReceiver(usbReceiver, filter)
         }

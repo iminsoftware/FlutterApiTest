@@ -53,9 +53,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String _brand = 'iMin';
-  String _model = '加载中...';
-  String _serialNumber = '加载中...';
-  String _deviceName = '加载中...';
+  String _model = 'Loading...';
+  String _serialNumber = 'Loading...';
+  String _deviceName = 'Loading...';
 
   @override
   void initState() {
@@ -81,9 +81,9 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         setState(() {
           _brand = 'iMin';
-          _model = '未知设备';
-          _serialNumber = '未知';
-          _deviceName = '未知';
+          _model = 'Unknown';
+          _serialNumber = 'Unknown';
+          _deviceName = 'Unknown';
         });
       }
     }

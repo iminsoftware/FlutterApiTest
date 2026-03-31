@@ -384,87 +384,87 @@ class _ScannerPageState extends State<ScannerPage> {
 
                       const Divider(height: 1),
 
-                      // Scan history - 使用固定高度
-                      SizedBox(
-                        height: 400, // 固定高度，确保有足够空间显示
-                        child: _scanHistory.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.qr_code_scanner,
-                                      size: 64,
-                                      color: Colors.grey[400],
+                      // Scan history
+                      if (_scanHistory.isEmpty)
+                        SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.qr_code_scanner,
+                                  size: 64,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _isListening
+                                      ? l10n.noScanData
+                                      : l10n.scannerTips,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _scanHistory.length,
+                          itemBuilder: (context, index) {
+                            final scan = _scanHistory[index];
+                            return Card(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              child: ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.blue,
+                                  child: Text(
+                                    '${_scanCount - index}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
                                     ),
-                                    const SizedBox(height: 16),
+                                  ),
+                                ),
+                                title: Text(
+                                  scan.data,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 4),
+                                    Text('Type: ${scan.labelType}'),
                                     Text(
-                                      _isListening
-                                          ? l10n.noScanData
-                                          : l10n.scannerTips,
+                                      '${l10n.timestamp}: ${_formatTime(scan.timestamp)}',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 12,
                                         color: Colors.grey[600],
                                       ),
                                     ),
                                   ],
                                 ),
-                              )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _scanHistory.length,
-                                itemBuilder: (context, index) {
-                                  final scan = _scanHistory[index];
-                                  return Card(
-                                    margin: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 4,
-                                    ),
-                                    child: ListTile(
-                                      leading: CircleAvatar(
-                                        backgroundColor: Colors.blue,
-                                        child: Text(
-                                          '${_scanCount - index}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                      title: Text(
-                                        scan.data,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: 'monospace',
-                                        ),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const SizedBox(height: 4),
-                                          Text('Type: ${scan.labelType}'),
-                                          Text(
-                                            '${l10n.timestamp}: ${_formatTime(scan.timestamp)}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      trailing: IconButton(
-                                        icon: const Icon(Icons.copy, size: 20),
-                                        onPressed: () {
-                                          _showSuccess('Copied: ${scan.data}');
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.copy, size: 20),
+                                  onPressed: () {
+                                    _showSuccess('Copied: ${scan.data}');
+                                  },
+                                ),
                               ),
-                      ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),

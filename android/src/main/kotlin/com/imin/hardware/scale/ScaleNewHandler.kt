@@ -83,7 +83,7 @@ class ScaleNewHandler(
                     } catch (e: Exception) {
                         Log.e(TAG, "Auto start getData failed", e)
                     }
-                }, 500) // 延迟 500ms 确保服务完全就绪
+                }, 1500) // 延迟 1500ms 确保服务和硬件完全就绪
             }
         }
         
@@ -109,23 +109,26 @@ class ScaleNewHandler(
         try {
             Log.d(TAG, "Starting data acquisition (internal)...")
             
-            // 尝试先调用 reqWeightOutPut 启动数据输出
-            try {
-                scaleManager.reqWeightOutPut()
-                Log.d(TAG, "reqWeightOutPut() called")
-            } catch (e: Exception) {
-                Log.w(TAG, "reqWeightOutPut() failed: ${e.message}")
-            }
-            
-            // 调用 getData - 只使用 ScaleResult（根据官方示例）
+            // 调用 getData 先注册回调（根据官方示例）
             Log.d(TAG, "Calling getData with ScaleResult callback...")
             scaleManager.getData(scaleResultCallback)
             Log.d(TAG, "getData() called successfully")
             
             isGettingData = true
             
-            // 启动轮询（持续请求数据）
-            startPolling()
+            // 延迟后再调用 reqWeightOutPut，确保回调已注册
+            mainHandler.postDelayed({
+                if (isGettingData && isConnected) {
+                    try {
+                        scaleManager.reqWeightOutPut()
+                        Log.d(TAG, "reqWeightOutPut() called after getData")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "reqWeightOutPut() failed: ${e.message}")
+                    }
+                    // 启动轮询（持续请求数据）
+                    startPolling()
+                }
+            }, 300)
         } catch (e: Exception) {
             Log.e(TAG, "startGetDataInternal failed", e)
             throw e
@@ -222,11 +225,39 @@ class ScaleNewHandler(
         
         override fun error(errorCode: Int) {
             Log.e(TAG, "❌ Callback: error - errorCode=$errorCode")
-            sendEvent(mapOf(
-                "type" to "error",
-                "errorCode" to errorCode,
-                "timestamp" to System.currentTimeMillis()
-            ))
+            
+            if (errorCode == -1 && isConnected) {
+                // Error -1 typically means the scale hardware communication failed
+                // but the service is still connected. Retry getData after a delay.
+                Log.w(TAG, "Scale hardware communication error, will retry getData...")
+                isGettingData = false
+                stopPolling()
+                
+                // Send error event to Flutter
+                sendEvent(mapOf(
+                    "type" to "error",
+                    "errorCode" to errorCode,
+                    "timestamp" to System.currentTimeMillis()
+                ))
+                
+                // Retry getData after a longer delay to allow hardware to initialize
+                mainHandler.postDelayed({
+                    if (isConnected && !isGettingData) {
+                        Log.d(TAG, "Retrying getData after error -1...")
+                        try {
+                            startGetDataInternal()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Retry getData failed", e)
+                        }
+                    }
+                }, 2000)
+            } else {
+                sendEvent(mapOf(
+                    "type" to "error",
+                    "errorCode" to errorCode,
+                    "timestamp" to System.currentTimeMillis()
+                ))
+            }
         }
     }
     
@@ -562,26 +593,63 @@ class ScaleNewHandler(
     // ==================== 设备信息 ====================
     
     private fun readAcceleData(result: MethodChannel.Result) {
-        safeExecute(result, listOf(0, 0, 0)) {
-            it.readAcceleData()?.toList() ?: listOf(0, 0, 0)
+        if (!checkConnection(result)) return
+        try {
+            val data = scaleManager.readAcceleData()
+            if (data != null && data.isNotEmpty()) {
+                result.success(data.toList())
+            } else {
+                result.success(listOf(0, 0, 0))
+            }
+        } catch (e: RemoteException) {
+            Log.e(TAG, "readAcceleData failed - RemoteException", e)
+            result.error("READ_ACCELE_FAILED", "Service call failed: ${e.message}", null)
+        } catch (e: Exception) {
+            Log.e(TAG, "readAcceleData failed", e)
+            result.error("READ_ACCELE_FAILED", e.message, null)
         }
     }
     
     private fun readSealState(result: MethodChannel.Result) {
-        safeExecute(result, 0) {
-            it.stealStatus
+        if (!checkConnection(result)) return
+        try {
+            val state = scaleManager.stealStatus
+            result.success(state)
+        } catch (e: Exception) {
+            Log.e(TAG, "readSealState failed", e)
+            result.error("READ_SEAL_STATE_FAILED", e.message, null)
         }
     }
     
     private fun getCalStatus(result: MethodChannel.Result) {
-        safeExecute(result, 0) {
-            it.calStatus
+        if (!checkConnection(result)) return
+        try {
+            val status = scaleManager.calStatus
+            result.success(status)
+        } catch (e: RemoteException) {
+            Log.e(TAG, "getCalStatus failed - RemoteException", e)
+            result.error("GET_CAL_STATUS_FAILED", "Service call failed: ${e.message}", null)
+        } catch (e: Exception) {
+            Log.e(TAG, "getCalStatus failed", e)
+            result.error("GET_CAL_STATUS_FAILED", e.message, null)
         }
     }
     
     private fun getCalInfo(result: MethodChannel.Result) {
-        safeExecute(result, emptyList<List<Int>>()) {
-            it.calInfo?.map { arr -> arr.toList() } ?: emptyList()
+        if (!checkConnection(result)) return
+        try {
+            val info = scaleManager.calInfo
+            if (info != null) {
+                result.success(info.map { arr -> arr.toList() })
+            } else {
+                result.success(emptyList<List<Int>>())
+            }
+        } catch (e: RemoteException) {
+            Log.e(TAG, "getCalInfo failed - RemoteException", e)
+            result.error("GET_CAL_INFO_FAILED", "Service call failed: ${e.message}", null)
+        } catch (e: Exception) {
+            Log.e(TAG, "getCalInfo failed", e)
+            result.error("GET_CAL_INFO_FAILED", e.message, null)
         }
     }
     
@@ -602,17 +670,30 @@ class ScaleNewHandler(
     }
     
     private fun getCityAccelerations(result: MethodChannel.Result) {
-        safeExecute(result, emptyList<String>()) {
-            it.cityAccelerations ?: emptyList()
+        if (!checkConnection(result)) return
+        try {
+            val list = scaleManager.cityAccelerations
+            result.success(list ?: emptyList<String>())
+        } catch (e: Exception) {
+            Log.e(TAG, "getCityAccelerations failed", e)
+            result.error("GET_CITY_ACCELERATIONS_FAILED", e.message, null)
         }
     }
     
     private fun setGravityAcceleration(call: MethodCall, result: MethodChannel.Result) {
         if (!checkConnection(result)) return
         val index = call.argument<Int>("index") ?: 0
-        safeExecute(result, false) {
-            val returnCode = it.setGravityAcceleration(index)
-            returnCode == 0  // 0 表示成功
+        try {
+            val returnCode = scaleManager.setGravityAcceleration(index)
+            Log.d(TAG, "setGravityAcceleration index=$index, returnCode=$returnCode")
+            if (returnCode == 0) {
+                result.success(true)
+            } else {
+                result.error("SET_GRAVITY_FAILED", "setGravityAcceleration returned error code: $returnCode", null)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "setGravityAcceleration failed", e)
+            result.error("SET_GRAVITY_FAILED", e.message, null)
         }
     }
     

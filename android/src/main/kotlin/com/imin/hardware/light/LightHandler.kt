@@ -124,7 +124,11 @@ class LightHandler(private val activity: Activity) {
                 addAction(ACTION_USB_DEVICE_ATTACHED)
                 addAction(ACTION_USB_DEVICE_DETACHED)
             }
-            activity.registerReceiver(usbDeviceReceiver, intentFilter)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                activity.registerReceiver(usbDeviceReceiver, intentFilter, Context.RECEIVER_EXPORTED)
+            } else {
+                activity.registerReceiver(usbDeviceReceiver, intentFilter)
+            }
             isReceiverRegistered = true
             Log.d(TAG, "USB receiver registered")
         }

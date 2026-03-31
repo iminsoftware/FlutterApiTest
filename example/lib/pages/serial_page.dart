@@ -206,9 +206,8 @@ class _SerialPageState extends State<SerialPage> {
 
   // Localization helper
   String _t(String en, String zh) {
-    // Simple language detection based on system locale
-    // You can enhance this with proper localization package
-    return zh; // Default to Chinese for iMin devices
+    final locale = Localizations.localeOf(context);
+    return locale.languageCode == 'zh' ? zh : en;
   }
 
   @override

@@ -8,6 +8,15 @@ import android.content.IntentFilter
 import android.nfc.NdefMessage
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import android.nfc.tech.IsoDep
+import android.nfc.tech.MifareClassic
+import android.nfc.tech.MifareUltralight
+import android.nfc.tech.Ndef
+import android.nfc.tech.NdefFormatable
+import android.nfc.tech.NfcA
+import android.nfc.tech.NfcB
+import android.nfc.tech.NfcF
+import android.nfc.tech.NfcV
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -34,8 +43,10 @@ class NfcHandler(
     private var nfcAdapter: NfcAdapter? = null
     private var pendingIntent: PendingIntent? = null
     private var intentFilters: Array<IntentFilter>? = null
+    private var techLists: Array<Array<String>>? = null
     private var eventSink: EventChannel.EventSink? = null
     private var isListening = false
+    private var isResumed = false
 
     init {
         // Initialize NFC
@@ -85,7 +96,7 @@ class NfcHandler(
                 PendingIntent.getActivity(activity, 0, intent, 0)
             }
 
-            // Create intent filters (same as IMinApiTest)
+            // Create intent filters - include TECH_DISCOVERED for non-NDEF cards
             val ndefFilter = IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED).apply {
                 try {
                     addDataType("*/*")
@@ -93,8 +104,22 @@ class NfcHandler(
                     Log.e(TAG, "Error adding data type", e)
                 }
             }
+            val techFilter = IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED)
             val tagFilter = IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)
-            intentFilters = arrayOf(ndefFilter, tagFilter)
+            intentFilters = arrayOf(ndefFilter, techFilter, tagFilter)
+
+            // Tech lists for TECH_DISCOVERED - covers all common NFC card types
+            techLists = arrayOf(
+                arrayOf(NfcA::class.java.name),
+                arrayOf(NfcB::class.java.name),
+                arrayOf(NfcF::class.java.name),
+                arrayOf(NfcV::class.java.name),
+                arrayOf(IsoDep::class.java.name),
+                arrayOf(MifareClassic::class.java.name),
+                arrayOf(MifareUltralight::class.java.name),
+                arrayOf(Ndef::class.java.name),
+                arrayOf(NdefFormatable::class.java.name)
+            )
 
             Log.d(TAG, "NFC initialized successfully")
         } catch (e: Exception) {
@@ -150,6 +175,7 @@ class NfcHandler(
         Log.d(TAG, "Received NFC intent: $action")
 
         if (action == NfcAdapter.ACTION_TAG_DISCOVERED || 
+            action == NfcAdapter.ACTION_TECH_DISCOVERED ||
             action == NfcAdapter.ACTION_NDEF_DISCOVERED) {
             try {
                 // Read NFC data (same as IMinApiTest)
@@ -159,10 +185,11 @@ class NfcHandler(
                 Log.d(TAG, "NFC ID: $nfcId, Content: $content")
                 
                 if (nfcId.isNotEmpty()) {
+                    val tag = getTagFromIntent(intent)
                     val nfcData = mapOf(
                         "id" to nfcId,
                         "content" to content,
-                        "technology" to (intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)?.techList?.joinToString(", ") ?: ""),
+                        "technology" to (tag?.techList?.joinToString(", ") ?: ""),
                         "timestamp" to System.currentTimeMillis()
                     )
                     
@@ -180,7 +207,7 @@ class NfcHandler(
      * Read NFC ID (same as IMinApiTest NfcUtils.readNFCId)
      */
     private fun readNFCId(intent: Intent): String {
-        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
+        val tag = getTagFromIntent(intent)
         if (tag == null) {
             return ""
         }
@@ -202,6 +229,18 @@ class NfcHandler(
             Log.w(TAG, "Error reading NFC content", e)
         }
         return ""
+    }
+
+    /**
+     * Get Tag from intent, handling API level differences
+     */
+    private fun getTagFromIntent(intent: Intent): Tag? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(NfcAdapter.EXTRA_TAG, Tag::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+        }
     }
 
     /**
@@ -229,7 +268,7 @@ class NfcHandler(
     private fun enableForegroundDispatch() {
         try {
             if (nfcAdapter != null && pendingIntent != null && intentFilters != null && isListening) {
-                nfcAdapter?.enableForegroundDispatch(activity, pendingIntent, intentFilters, null)
+                nfcAdapter?.enableForegroundDispatch(activity, pendingIntent, intentFilters, techLists)
                 Log.d(TAG, "NFC foreground dispatch enabled")
             }
         } catch (e: Exception) {
@@ -255,17 +294,27 @@ class NfcHandler(
         eventSink = events
         isListening = true
         Log.d(TAG, "Started listening for NFC tags")
+        // If activity is already resumed, enable foreground dispatch now
+        // This fixes the timing issue where onResume fires before Dart starts listening
+        if (isResumed) {
+            enableForegroundDispatch()
+        }
     }
 
     override fun onCancel(arguments: Any?) {
         eventSink = null
         isListening = false
+        // Disable foreground dispatch when Dart stops listening
+        if (isResumed) {
+            disableForegroundDispatch()
+        }
         Log.d(TAG, "Stopped listening for NFC tags")
     }
 
     // ActivityLifecycleCallbacks implementation (only onResume/onPause needed)
     override fun onActivityResumed(activity: Activity) {
         if (activity == this.activity) {
+            isResumed = true
             // Same as IMinApiTest onResume
             enableForegroundDispatch()
         }
@@ -273,6 +322,7 @@ class NfcHandler(
 
     override fun onActivityPaused(activity: Activity) {
         if (activity == this.activity) {
+            isResumed = false
             // Same as IMinApiTest onPause
             disableForegroundDispatch()
         }

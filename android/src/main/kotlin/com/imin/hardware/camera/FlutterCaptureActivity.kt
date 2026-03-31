@@ -8,6 +8,7 @@ import com.imin.scan.DecodeConfig
 import com.imin.scan.DecodeFormatManager
 import com.imin.scan.Result
 import com.imin.scan.analyze.MultiFormatAnalyzer
+import com.imin.zxing.BarcodeFormat
 
 /**
  * Custom CaptureActivity for Flutter integration
@@ -20,12 +21,62 @@ class FlutterCaptureActivity : CaptureActivity() {
         const val SCAN_FORMAT = "SCAN_FORMAT"
     }
 
+    private var useFlash = false
+    private var beepEnabled = true
+    private var formats: List<String>? = null
+    private var timeout: Int = 0
+    private var timeoutRunnable: Runnable? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Read parameters before super.onCreate (which calls initUI -> initCameraScan)
+        useFlash = intent.getBooleanExtra("useFlash", false)
+        beepEnabled = intent.getBooleanExtra("beepEnabled", true)
+        formats = intent.getStringArrayListExtra("formats")
+        timeout = intent.getIntExtra("timeout", 0)
+        super.onCreate(savedInstanceState)
+
+        // Set up timeout if specified (timeout > 0 means auto-cancel after N milliseconds)
+        if (timeout > 0) {
+            timeoutRunnable = Runnable {
+                // Timeout reached, cancel scan
+                setResult(Activity.RESULT_CANCELED)
+                finish()
+            }
+            window.decorView.postDelayed(timeoutRunnable!!, timeout.toLong())
+        }
+    }
+
+    override fun onDestroy() {
+        // Cancel timeout if activity is finishing before timeout
+        timeoutRunnable?.let { window.decorView.removeCallbacks(it) }
+        timeoutRunnable = null
+        super.onDestroy()
+    }
+
     override fun initCameraScan() {
         super.initCameraScan()
         
+        // Build decode hints based on requested formats
+        val hints = if (formats != null && formats!!.isNotEmpty()) {
+            val barcodeFormats = formats!!.mapNotNull { name ->
+                try {
+                    BarcodeFormat.valueOf(name)
+                } catch (e: IllegalArgumentException) {
+                    null
+                }
+            }.toTypedArray()
+            if (barcodeFormats.isNotEmpty()) {
+                DecodeFormatManager.createDecodeHints(*barcodeFormats)
+            } else {
+                DecodeFormatManager.DEFAULT_HINTS
+            }
+        } else {
+            DecodeFormatManager.DEFAULT_HINTS
+        }
+
         // Initialize decode configuration
         val decodeConfig = DecodeConfig().apply {
-            hints = DecodeFormatManager.DEFAULT_HINTS
+            setHints(hints)
             isSupportVerticalCode = false
             isSupportLuminanceInvert = false
             areaRectRatio = 0.8f
@@ -34,7 +85,7 @@ class FlutterCaptureActivity : CaptureActivity() {
 
         // Configure camera scan
         cameraScan.apply {
-            setPlayBeep(true)
+            setPlayBeep(beepEnabled)
             setVibrate(false)
             setNeedAutoZoom(true)
             setNeedTouchZoom(true)
@@ -42,10 +93,33 @@ class FlutterCaptureActivity : CaptureActivity() {
             setAnalyzer(MultiFormatAnalyzer(decodeConfig))
             setAnalyzeImage(true)
         }
+
+        // Bind flashlight view so it can be shown/hidden by ambient light sensor
+        // and make it always visible for user to toggle manually
+        if (ivFlashlight != null) {
+            cameraScan.bindFlashlightView(ivFlashlight)
+            // Make flashlight button always visible so user can toggle it
+            ivFlashlight.visibility = android.view.View.VISIBLE
+        }
+
+        // If useFlash is requested, enable torch after camera starts
+        if (useFlash) {
+            // Delay to ensure camera is fully initialized before enabling torch
+            previewView?.postDelayed({
+                cameraScan.enableTorch(true)
+                ivFlashlight?.isSelected = true
+            }, 500)
+        }
     }
 
     override fun onScanResultCallback(result: Result?): Boolean {
         if (result != null) {
+            // Stop image analysis immediately to prevent duplicate beep sounds.
+            // Because we return true (intercept), DefaultCameraScan resets isAnalyzeResult
+            // to false, which allows the analyzer to decode the same barcode again before
+            // finish() completes. Stopping analysis here prevents that race condition.
+            cameraScan.setAnalyzeImage(false)
+
             // Return result to Flutter
             val intent = Intent().apply {
                 putExtra(SCAN_RESULT, result.text)

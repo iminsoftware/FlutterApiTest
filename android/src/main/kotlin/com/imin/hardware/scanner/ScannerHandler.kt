@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.util.Log
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -120,7 +121,11 @@ class ScannerHandler(
             }
             
             // Register receiver
-            context.registerReceiver(scannerReceiver, intentFilter)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(scannerReceiver, intentFilter, Context.RECEIVER_EXPORTED)
+            } else {
+                context.registerReceiver(scannerReceiver, intentFilter)
+            }
             isListening = true
             
             Log.d(TAG, "Started listening for scanner broadcasts")
