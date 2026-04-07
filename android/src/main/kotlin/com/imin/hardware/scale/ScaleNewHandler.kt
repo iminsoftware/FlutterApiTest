@@ -594,10 +594,18 @@ class ScaleNewHandler(
     
     private fun readAcceleData(result: MethodChannel.Result) {
         if (!checkConnection(result)) return
+        // Pause polling to avoid IPC conflicts
+        val wasPolling = isGettingData
+        if (wasPolling) stopPolling()
         try {
             val data = scaleManager.readAcceleData()
             if (data != null && data.isNotEmpty()) {
-                result.success(data.toList())
+                // Ensure we always return exactly 3 elements [X, Y, Z]
+                val padded = IntArray(3)
+                for (i in 0 until minOf(data.size, 3)) {
+                    padded[i] = data[i]
+                }
+                result.success(padded.toList())
             } else {
                 result.success(listOf(0, 0, 0))
             }
@@ -607,22 +615,30 @@ class ScaleNewHandler(
         } catch (e: Exception) {
             Log.e(TAG, "readAcceleData failed", e)
             result.error("READ_ACCELE_FAILED", e.message, null)
+        } finally {
+            if (wasPolling) startPolling()
         }
     }
     
     private fun readSealState(result: MethodChannel.Result) {
         if (!checkConnection(result)) return
+        val wasPolling = isGettingData
+        if (wasPolling) stopPolling()
         try {
             val state = scaleManager.stealStatus
             result.success(state)
         } catch (e: Exception) {
             Log.e(TAG, "readSealState failed", e)
             result.error("READ_SEAL_STATE_FAILED", e.message, null)
+        } finally {
+            if (wasPolling) startPolling()
         }
     }
     
     private fun getCalStatus(result: MethodChannel.Result) {
         if (!checkConnection(result)) return
+        val wasPolling = isGettingData
+        if (wasPolling) stopPolling()
         try {
             val status = scaleManager.calStatus
             result.success(status)
@@ -632,11 +648,15 @@ class ScaleNewHandler(
         } catch (e: Exception) {
             Log.e(TAG, "getCalStatus failed", e)
             result.error("GET_CAL_STATUS_FAILED", e.message, null)
+        } finally {
+            if (wasPolling) startPolling()
         }
     }
     
     private fun getCalInfo(result: MethodChannel.Result) {
         if (!checkConnection(result)) return
+        val wasPolling = isGettingData
+        if (wasPolling) stopPolling()
         try {
             val info = scaleManager.calInfo
             if (info != null) {
@@ -650,6 +670,8 @@ class ScaleNewHandler(
         } catch (e: Exception) {
             Log.e(TAG, "getCalInfo failed", e)
             result.error("GET_CAL_INFO_FAILED", e.message, null)
+        } finally {
+            if (wasPolling) startPolling()
         }
     }
     
@@ -671,18 +693,24 @@ class ScaleNewHandler(
     
     private fun getCityAccelerations(result: MethodChannel.Result) {
         if (!checkConnection(result)) return
+        val wasPolling = isGettingData
+        if (wasPolling) stopPolling()
         try {
             val list = scaleManager.cityAccelerations
             result.success(list ?: emptyList<String>())
         } catch (e: Exception) {
             Log.e(TAG, "getCityAccelerations failed", e)
             result.error("GET_CITY_ACCELERATIONS_FAILED", e.message, null)
+        } finally {
+            if (wasPolling) startPolling()
         }
     }
     
     private fun setGravityAcceleration(call: MethodCall, result: MethodChannel.Result) {
         if (!checkConnection(result)) return
         val index = call.argument<Int>("index") ?: 0
+        val wasPolling = isGettingData
+        if (wasPolling) stopPolling()
         try {
             val returnCode = scaleManager.setGravityAcceleration(index)
             Log.d(TAG, "setGravityAcceleration index=$index, returnCode=$returnCode")
@@ -694,6 +722,8 @@ class ScaleNewHandler(
         } catch (e: Exception) {
             Log.e(TAG, "setGravityAcceleration failed", e)
             result.error("SET_GRAVITY_FAILED", e.message, null)
+        } finally {
+            if (wasPolling) startPolling()
         }
     }
     

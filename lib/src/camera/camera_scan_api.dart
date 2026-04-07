@@ -68,10 +68,10 @@ class CameraScanApi {
     return result['code'] as String;
   }
 
-  /// Scan only barcodes (EAN, UPC, CODE_128)
+  /// Scan only barcodes (all 1D formats)
   static Future<String> scanBarcode({String? prompt}) async {
     final result = await scan(
-      formats: ['EAN_13', 'EAN_8', 'UPC_A', 'UPC_E', 'CODE_128'],
+      formats: BarcodeFormat.oneDimensionalFormats,
       prompt: prompt ?? 'Scan a Barcode',
     );
     return result['code'] as String;
@@ -80,23 +80,7 @@ class CameraScanApi {
   /// Scan all supported formats
   static Future<Map<String, dynamic>> scanAll({String? prompt}) async {
     return await scan(
-      formats: [
-        'QR_CODE',
-        'EAN_13',
-        'EAN_8',
-        'UPC_A',
-        'UPC_E',
-        'CODE_128',
-        'CODE_39',
-        'CODE_93',
-        'CODABAR',
-        'ITF',
-        'RSS_14',
-        'RSS_EXPANDED',
-        'DATA_MATRIX',
-        'PDF_417',
-        'AZTEC',
-      ],
+      formats: BarcodeFormat.allFormats,
       prompt: prompt,
     );
   }
@@ -140,6 +124,7 @@ class BarcodeFormat {
     ean13,
     itf,
     rss14,
+
     rssExpanded,
     upcA,
     upcE,

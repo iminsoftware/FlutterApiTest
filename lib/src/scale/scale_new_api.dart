@@ -454,7 +454,13 @@ class IminScaleNew {
     try {
       final result =
           await _channel.invokeMethod<List<dynamic>>('scaleNew.readAcceleData');
-      return result?.cast<int>() ?? [0, 0, 0];
+      if (result == null) return [0, 0, 0];
+      final list = result.cast<int>();
+      // Ensure we always return exactly 3 elements
+      while (list.length < 3) {
+        list.add(0);
+      }
+      return list.sublist(0, 3);
     } catch (e) {
       return [0, 0, 0];
     }

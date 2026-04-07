@@ -102,22 +102,34 @@ class FlutterCaptureActivity : CaptureActivity() {
             ivFlashlight.visibility = android.view.View.VISIBLE
         }
 
-        // If useFlash is requested, enable torch after camera starts
+        // If useFlash is requested, enable torch after camera is ready
         if (useFlash) {
-            // Delay to ensure camera is fully initialized before enabling torch
-            previewView?.postDelayed({
-                cameraScan.enableTorch(true)
-                ivFlashlight?.isSelected = true
-            }, 500)
+            // Poll until camera is available, then enable torch
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            var attempts = 0
+            val maxAttempts = 20 // 20 * 100ms = 2 seconds max wait
+            val checkCamera = object : Runnable {
+                override fun run() {
+                    attempts++
+                    if (cameraScan.camera != null && cameraScan.hasFlashUnit()) {
+                        cameraScan.enableTorch(true)
+                        ivFlashlight?.isSelected = true
+                    } else if (attempts < maxAttempts) {
+                        handler.postDelayed(this, 100)
+                    }
+                }
+            }
+            handler.postDelayed(checkCamera, 200)
         }
     }
 
+    private var hasResult = false
+
     override fun onScanResultCallback(result: Result?): Boolean {
-        if (result != null) {
-            // Stop image analysis immediately to prevent duplicate beep sounds.
-            // Because we return true (intercept), DefaultCameraScan resets isAnalyzeResult
-            // to false, which allows the analyzer to decode the same barcode again before
-            // finish() completes. Stopping analysis here prevents that race condition.
+        if (result != null && !hasResult) {
+            hasResult = true
+
+            // Stop image analysis immediately to prevent duplicate results.
             cameraScan.setAnalyzeImage(false)
 
             // Return result to Flutter

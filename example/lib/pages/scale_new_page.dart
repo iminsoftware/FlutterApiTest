@@ -21,7 +21,6 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
   ScaleWeightData? _currentWeight;
   ScaleStatusData? _currentStatus;
   ScalePriceData? _currentPrice;
-  int? _errorCode;
 
   // 价格设置
   final TextEditingController _priceController = TextEditingController();
@@ -72,7 +71,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
         } else if (event.isPrice) {
           _currentPrice = event.data as ScalePriceData;
         } else if (event.isError) {
-          _errorCode = event.data as int;
+          // 错误码不显示给用户，仅忽略
         } else if (event.isConnection) {
           final conn = event.data as ScaleConnectionData;
           _isConnected = conn.connected;
@@ -171,8 +170,6 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
           _buildOperationsCard(),
           const SizedBox(height: 16),
           _buildPriceCard(),
-          const SizedBox(height: 16),
-          _buildDeviceInfoCard(),
           const SizedBox(height: 16),
           _buildHistoryCard(),
         ],
@@ -286,10 +283,7 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
               if (_currentStatus!.calibrationErr)
                 _buildWarning(_t('❌ Calibration error', '❌ 标定错误')),
             ],
-            if (_errorCode != null) ...[
-              const Divider(),
-              _buildWarning(_t('Error code: $_errorCode', '错误码: $_errorCode')),
-            ],
+            // 错误码不再显示给用户
           ],
         ),
       ),
@@ -387,6 +381,44 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                   child: Text(_t('Set', '设置')),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isConnected
+                    ? () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(_t('Restart Scale', '重启电子秤')),
+                            content: Text(_t(
+                                'Are you sure?\nRestart will re-read zero point.',
+                                '确定要重启电子秤吗？\n重启会重新读取零点，请谨慎操作。')),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(_t('Cancel', '取消')),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  IminScaleNew.restart();
+                                },
+                                child: Text(_t('Confirm', '确定')),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    : null,
+                icon: const Icon(Icons.restart_alt),
+                label: Text(_t('Restart Scale', '重启电子秤')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+              ),
             ),
           ],
         ),
@@ -496,156 +528,6 @@ class _ScaleNewPageState extends State<ScaleNewPage> {
                           }
                         }
                       : null,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 设备信息卡片
-  Widget _buildDeviceInfoCard() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _t('Device Info', '设备信息'),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _isConnected
-                      ? () async {
-                          final data = await IminScaleNew.readAcceleData();
-                          if (mounted) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text(_t('Acceleration Data', '加速度数据')),
-                                content: Text(
-                                    'X: ${data[0]}\nY: ${data[1]}\nZ: ${data[2]}'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text(_t('Close', '关闭')),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.speed),
-                  label: Text(_t('Acceleration', '加速度')),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _isConnected
-                      ? () async {
-                          final state = await IminScaleNew.readSealState();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(_t(
-                                    'Seal status: ${state == 0 ? "Normal" : "Broken"}',
-                                    '铅封状态: ${state == 0 ? "正常" : "被破坏"}')),
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.security),
-                  label: Text(_t('Seal Status', '铅封状态')),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _isConnected
-                      ? () async {
-                          final status = await IminScaleNew.getCalStatus();
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(_t(
-                                    'Cal button: ${status == 0 ? "Not pressed" : "Pressed"}',
-                                    '标定按钮: ${status == 0 ? "未按下" : "按下"}')),
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.tune),
-                  label: Text(_t('Cal Status', '标定状态')),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _isConnected
-                      ? () async {
-                          final info = await IminScaleNew.getCalInfo();
-                          if (mounted) {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text(_t('Scale Parameters', '秤参数信息')),
-                                content: Text(
-                                  info.isEmpty
-                                      ? _t('No data', '无数据')
-                                      : info
-                                          .map((e) => '${e[0]}/${e[1]}')
-                                          .join('\n'),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text(_t('Close', '关闭')),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  icon: const Icon(Icons.info),
-                  label: Text(_t('Parameters', '秤参数')),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _isConnected
-                      ? () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(_t('Restart Scale', '重启电子秤')),
-                              content: Text(_t(
-                                  'Are you sure?\nRestart will re-read zero point.',
-                                  '确定要重启电子秤吗？\n重启会重新读取零点，请谨慎操作。')),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(_t('Cancel', '取消')),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    IminScaleNew.restart();
-                                  },
-                                  child: Text(_t('Confirm', '确定')),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.restart_alt),
-                  label: Text(_t('Restart', '重启')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                  ),
                 ),
               ],
             ),

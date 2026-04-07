@@ -73,70 +73,21 @@ class _CameraScanPageState extends State<CameraScanPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-            // Quick Scan Buttons
-            Text(
-              l10n.quickScan,
-              style: Theme.of(context).textTheme.titleMedium,
+            // Single scan button
+            SizedBox(
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: _isScanning ? null : _scanAll,
+                icon: const Icon(Icons.document_scanner, size: 28),
+                label: Text(
+                  l10n.scanAllFormats,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanQuick,
-              icon: const Icon(Icons.qr_code_scanner),
-              label: Text(l10n.quickScanDefault),
-            ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanQRCode,
-              icon: const Icon(Icons.qr_code),
-              label: Text(l10n.scanQRCodeOnly),
-            ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanBarcode,
-              icon: const Icon(Icons.barcode_reader),
-              label: Text(l10n.scanBarcodeOnly),
-            ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanAll,
-              icon: const Icon(Icons.document_scanner),
-              label: Text(l10n.scanAllFormats),
-            ),
-            const SizedBox(height: 16),
-
-            // Advanced Options
-            Text(
-              l10n.advancedOptions,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanWithFlash,
-              icon: const Icon(Icons.flash_on),
-              label: Text(l10n.scanWithFlash),
-            ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanWithTimeout,
-              icon: const Icon(Icons.timer),
-              label: Text(l10n.scanWithTimeout),
-            ),
-            const SizedBox(height: 8),
-
-            ElevatedButton.icon(
-              onPressed: _isScanning ? null : _scanCustomFormats,
-              icon: const Icon(Icons.settings),
-              label: Text(l10n.scanCustomFormats),
-            ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
             // Scan History
             Row(
@@ -181,95 +132,10 @@ class _CameraScanPageState extends State<CameraScanPage> {
     );
   }
 
-  Future<void> _scanQuick() async {
-    setState(() => _isScanning = true);
-    try {
-      final code = await CameraScanApi.scanQuick();
-      _handleScanResult(code, 'DEFAULT');
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isScanning = false);
-    }
-  }
-
-  Future<void> _scanQRCode() async {
-    setState(() => _isScanning = true);
-    try {
-      final code = await CameraScanApi.scanQRCode();
-      _handleScanResult(code, 'QR_CODE');
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isScanning = false);
-    }
-  }
-
-  Future<void> _scanBarcode() async {
-    setState(() => _isScanning = true);
-    try {
-      final code = await CameraScanApi.scanBarcode();
-      _handleScanResult(code, 'BARCODE');
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isScanning = false);
-    }
-  }
-
   Future<void> _scanAll() async {
     setState(() => _isScanning = true);
     try {
       final result = await CameraScanApi.scanAll();
-      _handleScanResult(result['code'], result['format']);
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isScanning = false);
-    }
-  }
-
-  Future<void> _scanWithFlash() async {
-    setState(() => _isScanning = true);
-    try {
-      final result = await CameraScanApi.scan(
-        useFlash: true,
-        prompt: 'Scan with flash enabled',
-      );
-      _handleScanResult(result['code'], result['format']);
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isScanning = false);
-    }
-  }
-
-  Future<void> _scanWithTimeout() async {
-    setState(() => _isScanning = true);
-    try {
-      final result = await CameraScanApi.scan(
-        timeout: 10000, // 10 seconds
-        prompt: 'Scan within 10 seconds',
-      );
-      _handleScanResult(result['code'], result['format']);
-    } catch (e) {
-      _showError(e.toString());
-    } finally {
-      setState(() => _isScanning = false);
-    }
-  }
-
-  Future<void> _scanCustomFormats() async {
-    setState(() => _isScanning = true);
-    try {
-      final result = await CameraScanApi.scan(
-        formats: [
-          BarcodeFormat.qrCode,
-          BarcodeFormat.code128,
-          BarcodeFormat.dataMatrix,
-        ],
-        prompt: 'Scan QR, CODE_128, or DATA_MATRIX',
-      );
       _handleScanResult(result['code'], result['format']);
     } catch (e) {
       _showError(e.toString());
