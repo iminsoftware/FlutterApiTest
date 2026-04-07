@@ -42,6 +42,9 @@ class RfidHandler(
     private var isReading = false
     private var broadcastReceiver: BroadcastReceiver? = null
 
+    // Pending connect result waiting for ServiceStatusListener callback
+    private var pendingConnectResult: MethodChannel.Result? = null
+
     // ReaderCall callback
     private val readerCall = object : ReaderCall() {
         override fun onSuccess(cmd: Byte, data: DataParameter) {
@@ -151,38 +154,145 @@ class RfidHandler(
 
     private fun connect(result: MethodChannel.Result) {
         try {
+            // If already connected, return immediately
+            if (isConnected && rfidManager?.helper != null) {
+                result.success(null)
+                return
+            }
+
+            // Cancel any previous pending result
+            pendingConnectResult?.error("CONNECT_CANCELLED", "New connect request", null)
+            pendingConnectResult = result
+
             rfidManager = RFIDManager.getInstance()
             rfidManager?.connect(context)
 
-            // Register reader callback
-            val helper = rfidManager?.helper
-            if (helper != null) {
-                helper.registerReaderCall(readerCall)
-                isConnected = true
-                sendConnectionEvent(true)
-                Log.d(TAG, "RFID connected")
-                result.success(null)
-            } else {
-                // Helper may not be available immediately, wait a bit
-                mainHandler.postDelayed({
-                    val h = rfidManager?.helper
-                    if (h != null) {
-                        h.registerReaderCall(readerCall)
+            // Delay slightly to allow the AIDL service binding to complete
+            mainHandler.postDelayed({
+                // Use ServiceStatusListener to get the real connection callback
+                val helper = rfidManager?.helper
+                if (helper is com.imin.rfid.ServicesHelper) {
+                    if (helper.isServiceAvailable) {
+                        // Already connected
+                        Log.d(TAG, "RFID service already available")
+                        helper.registerReaderCall(readerCall)
                         isConnected = true
                         sendConnectionEvent(true)
-                        Log.d(TAG, "RFID connected (delayed)")
-                        result.success(null)
+                        pendingConnectResult?.success(null)
+                        pendingConnectResult = null
                     } else {
-                        isConnected = false
-                        result.error("CONNECT_FAILED", "RFID helper not available", null)
+                        helper.addServiceStatusListener(object : com.imin.rfid.ServicesHelper.ServiceStatusListener {
+                            override fun onServiceConnected() {
+                                Log.d(TAG, "RFID service connected")
+                                helper.removeServiceStatusListener(this)
+                                helper.registerReaderCall(readerCall)
+                                isConnected = true
+                                sendConnectionEvent(true)
+                                mainHandler.post {
+                                    pendingConnectResult?.success(null)
+                                    pendingConnectResult = null
+                                }
+                            }
+
+                            override fun onServiceDisconnected() {
+                                Log.w(TAG, "RFID service disconnected")
+                                helper.removeServiceStatusListener(this)
+                                isConnected = false
+                                isReading = false
+                                sendConnectionEvent(false)
+                                mainHandler.post {
+                                    pendingConnectResult?.error("CONNECT_FAILED", "RFID service disconnected", null)
+                                    pendingConnectResult = null
+                                }
+                            }
+
+                            override fun onServiceError(e: android.os.RemoteException?) {
+                                Log.e(TAG, "RFID service error", e)
+                                helper.removeServiceStatusListener(this)
+                                isConnected = false
+                                mainHandler.post {
+                                    pendingConnectResult?.error("CONNECT_FAILED", e?.message ?: "RFID service error", null)
+                                    pendingConnectResult = null
+                                }
+                            }
+                        })
                     }
-                }, 1000)
-            }
+                } else {
+                    // helper still null after delay — keep polling (max 5s total)
+                    pollForHelper(result, retries = 9, delayMs = 500)
+                }
+            }, 500)
         } catch (e: Exception) {
             Log.e(TAG, "Connect failed", e)
             isConnected = false
+            pendingConnectResult = null
             result.error("CONNECT_FAILED", e.message, null)
         }
+    }
+
+    private fun pollForHelper(result: MethodChannel.Result, retries: Int, delayMs: Long) {
+        if (retries <= 0) {
+            Log.e(TAG, "RFID helper not available after polling")
+            pendingConnectResult = null
+            mainHandler.post {
+                result.error("CONNECT_FAILED", "RFID device not found or not connected", null)
+            }
+            return
+        }
+        mainHandler.postDelayed({
+            val helper = rfidManager?.helper
+            if (helper is com.imin.rfid.ServicesHelper) {
+                if (helper.isServiceAvailable) {
+                    // Service is ready, register callback directly
+                    Log.d(TAG, "RFID service available (polled)")
+                    helper.registerReaderCall(readerCall)
+                    isConnected = true
+                    sendConnectionEvent(true)
+                    pendingConnectResult?.success(null)
+                    pendingConnectResult = null
+                } else {
+                    // Service bound but not yet available, listen for status
+                    helper.addServiceStatusListener(object : com.imin.rfid.ServicesHelper.ServiceStatusListener {
+                        override fun onServiceConnected() {
+                            Log.d(TAG, "RFID service connected (polled listener)")
+                            helper.removeServiceStatusListener(this)
+                            helper.registerReaderCall(readerCall)
+                            isConnected = true
+                            sendConnectionEvent(true)
+                            mainHandler.post {
+                                pendingConnectResult?.success(null)
+                                pendingConnectResult = null
+                            }
+                        }
+
+                        override fun onServiceDisconnected() {
+                            Log.w(TAG, "RFID service disconnected (polled listener)")
+                            helper.removeServiceStatusListener(this)
+                            isConnected = false
+                            isReading = false
+                            sendConnectionEvent(false)
+                            mainHandler.post {
+                                pendingConnectResult?.error("CONNECT_FAILED", "RFID service disconnected", null)
+                                pendingConnectResult = null
+                            }
+                        }
+
+                        override fun onServiceError(e: android.os.RemoteException?) {
+                            Log.e(TAG, "RFID service error (polled listener)", e)
+                            helper.removeServiceStatusListener(this)
+                            isConnected = false
+                            mainHandler.post {
+                                pendingConnectResult?.error("CONNECT_FAILED", e?.message ?: "RFID service error", null)
+                                pendingConnectResult = null
+                            }
+                        }
+                    })
+                }
+            } else {
+                // helper still null, keep polling
+                pollForHelper(result, retries - 1, delayMs)
+            }
+        }, delayMs)
     }
 
     private fun disconnect(result: MethodChannel.Result) {
@@ -559,6 +669,8 @@ class RfidHandler(
 
     fun dispose() {
         try {
+            pendingConnectResult?.error("CONNECT_CANCELLED", "Handler disposed", null)
+            pendingConnectResult = null
             if (isReading) {
                 rfidManager?.helper?.tagInventoryRawStopReading()
                 isReading = false

@@ -31,8 +31,9 @@ class _RfidPageState extends State<RfidPage> {
   @override
   void initState() {
     super.initState();
-    _checkConnection();
     _listenToStreams();
+    // Auto-connect on page open, with a short delay for the service to bind
+    Future.delayed(const Duration(milliseconds: 500), _connect);
   }
 
   @override
@@ -43,6 +44,9 @@ class _RfidPageState extends State<RfidPage> {
     _epcController.dispose();
     _dataController.dispose();
     _passwordController.dispose();
+    // Stop reading and disconnect when leaving the page
+    if (_isReading) IminRfid.stopReading().catchError((_) {});
+    IminRfid.disconnect().catchError((_) {});
     super.dispose();
   }
 

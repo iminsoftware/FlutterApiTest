@@ -220,254 +220,238 @@ class _ScannerPageState extends State<ScannerPage> {
         body: SafeArea(
           child: Column(
             children: [
-              // 使用 Expanded + SingleChildScrollView 让整个内容区域可滚动
-              Expanded(
-                child: SingleChildScrollView(
+              // Configuration section (only when not listening)
+              if (!_isListening)
+                SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Configuration section
-                      if (!_isListening)
-                        Container(
-                          color: Colors.grey[100],
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.customConfig,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _actionController,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  labelText: l10n.broadcastAction,
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _dataKeyController,
-                                textInputAction: TextInputAction.next,
-                                decoration: InputDecoration(
-                                  labelText: l10n.stringDataKey,
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _byteDataKeyController,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) {
-                                  FocusScope.of(context).unfocus();
-                                  _configure();
-                                },
-                                decoration: InputDecoration(
-                                  labelText: l10n.byteDataKey,
-                                  border: const OutlineInputBorder(),
-                                  isDense: true,
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _configure,
-                                  child: Text(l10n.applyConfig),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      if (!_isListening) const Divider(height: 1),
-
-                      // Control buttons
-                      Padding(
+                      Container(
+                        color: Colors.grey[100],
                         padding: const EdgeInsets.all(16),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed:
-                                        _isListening ? null : _startListening,
-                                    icon: const Icon(Icons.play_arrow),
-                                    label: Text(l10n.startListening),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed:
-                                        _isListening ? _stopListening : null,
-                                    icon: const Icon(Icons.stop),
-                                    label: Text(l10n.stopListening),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              l10n.customConfig,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: _checkConnection,
-                                    icon: const Icon(Icons.refresh),
-                                    label: Text(l10n.status),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: _scanHistory.isEmpty
-                                        ? null
-                                        : _clearHistory,
-                                    icon: const Icon(Icons.clear_all),
-                                    label: Text(l10n.clear),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Status info
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        color:
-                            _isListening ? Colors.green[50] : Colors.grey[100],
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _isListening
-                                  ? '🟢 ${l10n.listening}'
-                                  : '⚪ ${l10n.notListening}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color:
-                                    _isListening ? Colors.green : Colors.grey,
+                            TextField(
+                              controller: _actionController,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: l10n.broadcastAction,
+                                border: const OutlineInputBorder(),
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white,
                               ),
                             ),
-                            Text(
-                              '${l10n.scanCount}: $_scanCount',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _dataKeyController,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: l10n.stringDataKey,
+                                border: const OutlineInputBorder(),
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _byteDataKeyController,
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) {
+                                FocusScope.of(context).unfocus();
+                                _configure();
+                              },
+                              decoration: InputDecoration(
+                                labelText: l10n.byteDataKey,
+                                border: const OutlineInputBorder(),
+                                isDense: true,
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _configure,
+                                child: Text(l10n.applyConfig),
+                              ),
                             ),
                           ],
                         ),
                       ),
-
                       const Divider(height: 1),
-
-                      // Scan history
-                      if (_scanHistory.isEmpty)
-                        SizedBox(
-                          height: 200,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.qr_code_scanner,
-                                  size: 64,
-                                  color: Colors.grey[400],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _isListening
-                                      ? l10n.noScanData
-                                      : l10n.scannerTips,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _scanHistory.length,
-                          itemBuilder: (context, index) {
-                            final scan = _scanHistory[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 4,
-                              ),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.blue,
-                                  child: Text(
-                                    '${_scanCount - index}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                                title: Text(
-                                  scan.data,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'monospace',
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 4),
-                                    Text('Type: ${scan.labelType}'),
-                                    Text(
-                                      '${l10n.timestamp}: ${_formatTime(scan.timestamp)}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.copy, size: 20),
-                                  onPressed: () {
-                                    _showSuccess('Copied: ${scan.data}');
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
                     ],
                   ),
                 ),
+
+              // Control buttons
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _isListening ? null : _startListening,
+                            icon: const Icon(Icons.play_arrow),
+                            label: Text(l10n.startListening),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _isListening ? _stopListening : null,
+                            icon: const Icon(Icons.stop),
+                            label: Text(l10n.stopListening),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _checkConnection,
+                            icon: const Icon(Icons.refresh),
+                            label: Text(l10n.status),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                _scanHistory.isEmpty ? null : _clearHistory,
+                            icon: const Icon(Icons.clear_all),
+                            label: Text(l10n.clear),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Status info
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: _isListening ? Colors.green[50] : Colors.grey[100],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _isListening
+                          ? '🟢 ${l10n.listening}'
+                          : '⚪ ${l10n.notListening}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _isListening ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      '${l10n.scanCount}: $_scanCount',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // Scan history - takes remaining space and scrolls independently
+              Expanded(
+                child: _scanHistory.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.qr_code_scanner,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _isListening ? l10n.noScanData : l10n.scannerTips,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _scanHistory.length,
+                        itemBuilder: (context, index) {
+                          final scan = _scanHistory[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue,
+                                child: Text(
+                                  '${_scanCount - index}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                scan.data,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text('Type: ${scan.labelType}'),
+                                  Text(
+                                    '${l10n.timestamp}: ${_formatTime(scan.timestamp)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.copy, size: 20),
+                                onPressed: () {
+                                  _showSuccess('Copied: ${scan.data}');
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
