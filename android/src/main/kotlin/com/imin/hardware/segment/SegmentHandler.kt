@@ -124,17 +124,15 @@ class SegmentHandler(private val activity: Activity) {
             }
             
             permissionCallback = result
+            val intent = Intent(ACTION_USB_PERMISSION).apply {
+                setPackage(activity.packageName)
+            }
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_MUTABLE
+                PendingIntent.FLAG_IMMUTABLE
             } else {
                 0
             }
-            val pendingIntent = PendingIntent.getBroadcast(
-                activity, 
-                0, 
-                Intent(ACTION_USB_PERMISSION), 
-                flags
-            )
+            val pendingIntent = PendingIntent.getBroadcast(activity, 0, intent, flags)
             usbManager.requestPermission(device, pendingIntent)
         } catch (e: Exception) {
             Log.e(TAG, "Error requesting permission", e)
@@ -144,20 +142,62 @@ class SegmentHandler(private val activity: Activity) {
     
     private fun connect(result: Result) {
         try {
+            val usbManager = activity.getSystemService(Context.USB_SERVICE) as UsbManager
+
+            // Auto find device if not already found
+            if (screenDevice == null) {
+                val deviceList = usbManager.deviceList
+                for (device in deviceList.values) {
+                    if (device.productId == SEGMENT_PID && device.vendorId == SEGMENT_VID) {
+                        screenDevice = device
+                        Log.d(TAG, "Auto-found segment device")
+                        break
+                    }
+                }
+            }
+
             val device = screenDevice
             if (device == null) {
-                result.error("NO_DEVICE", "No device found. Call findDevice first.", null)
+                result.error("NO_DEVICE", "Segment device not found. Please check USB connection.", null)
                 return
             }
-            
-            val connected = usbCommunication?.connectToDevice(device) ?: false
-            if (connected) {
-                usbCommunication?.startRead()
-                Log.d(TAG, "Connected to segment device")
-                result.success(true)
-            } else {
-                result.error("CONNECT_FAILED", "Failed to connect to device", null)
+
+            // Check permission - if already granted (via device_filter), connect directly
+            if (usbManager.hasPermission(device)) {
+                val connected = usbCommunication?.connectToDevice(device) ?: false
+                if (connected) {
+                    usbCommunication?.startRead()
+                    Log.d(TAG, "Connected to segment device")
+                    result.success(true)
+                } else {
+                    result.error("CONNECT_FAILED", "Failed to connect to device", null)
+                }
+                return
             }
+
+            // Need to request permission first
+            permissionCallback = object : Result {
+                override fun success(o: Any?) {
+                    val connected = usbCommunication?.connectToDevice(device) ?: false
+                    if (connected) {
+                        usbCommunication?.startRead()
+                        Log.d(TAG, "Connected after permission granted")
+                        result.success(true)
+                    } else {
+                        result.error("CONNECT_FAILED", "Failed to connect after permission granted", null)
+                    }
+                }
+                override fun error(code: String, msg: String?, details: Any?) {
+                    result.error(code, msg, details)
+                }
+                override fun notImplemented() {
+                    result.notImplemented()
+                }
+            }
+            val intent = Intent(ACTION_USB_PERMISSION).apply { setPackage(activity.packageName) }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else 0
+            val pendingIntent = PendingIntent.getBroadcast(activity, 0, intent, flags)
+            usbManager.requestPermission(device, pendingIntent)
         } catch (e: Exception) {
             Log.e(TAG, "Error connecting", e)
             result.error("CONNECT_ERROR", e.message, null)

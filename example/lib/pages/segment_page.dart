@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
 import '../l10n/app_localizations.dart';
 
@@ -19,6 +20,10 @@ class _SegmentPageState extends State<SegmentPage> {
   @override
   void dispose() {
     _dataController.dispose();
+    // 退出页面时断开连接
+    if (_isConnected) {
+      IminSegment.disconnect().catchError((_) {});
+    }
     super.dispose();
   }
 
@@ -69,6 +74,27 @@ class _SegmentPageState extends State<SegmentPage> {
   Future<void> _connect() async {
     final l10n = AppLocalizations.of(context);
     try {
+      // Step 1: Find device
+      final result = await IminSegment.findDevice();
+      if (result['found'] != true) {
+        _showError(l10n.noSegmentDeviceFound);
+        return;
+      }
+      setState(() {
+        _deviceInfo = '${l10n.deviceFound}\n'
+            'PID: ${result['productId']}\n'
+            'VID: ${result['vendorId']}\n'
+            'Name: ${result['deviceName']}';
+      });
+
+      // Step 2: Request permission
+      final granted = await IminSegment.requestPermission();
+      if (!granted) {
+        _showError(l10n.usbPermissionDenied);
+        return;
+      }
+
+      // Step 3: Connect
       final success = await IminSegment.connect();
       setState(() {
         _isConnected = success;
@@ -273,6 +299,12 @@ class _SegmentPageState extends State<SegmentPage> {
                       border: const OutlineInputBorder(),
                       helperText: l10n.numbersLettersSupported,
                     ),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      LengthLimitingTextInputFormatter(9),
+                    ],
                     maxLength: 9,
                   ),
                   const SizedBox(height: 16),
