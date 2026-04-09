@@ -49,8 +49,12 @@ android {
     }
 }
 
+android.applicationVariants.all { variant ->
+    variant.outputs.all {
+        outputFileName = "FlutterApiTest.apk"
+    }
+}
+
 flutter {
     source '../..'
 }
-
-dependencies {}
