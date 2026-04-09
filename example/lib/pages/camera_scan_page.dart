@@ -114,7 +114,7 @@ class _CameraScanPageState extends State<CameraScanPage> {
                 ),
               )
             else
-              ..._scanHistory.reversed.take(10).map((scan) => Card(
+              ..._scanHistory.reversed.map((scan) => Card(
                     child: ListTile(
                       leading: Icon(
                         scan['format'] == 'QR_CODE'
