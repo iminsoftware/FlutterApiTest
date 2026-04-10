@@ -327,18 +327,22 @@ class RfidTag {
   final String epc;
   final String? pc;
   final String? tid;
+  final String? crc;
   final int rssi;
   final int count;
   final int frequency;
+  final int antennaId;
   final int timestamp;
 
   RfidTag({
     required this.epc,
     this.pc,
     this.tid,
+    this.crc,
     required this.rssi,
     required this.count,
     required this.frequency,
+    this.antennaId = 0,
     required this.timestamp,
   });
 
@@ -347,9 +351,11 @@ class RfidTag {
       epc: map['epc'] as String? ?? '',
       pc: map['pc'] as String?,
       tid: map['tid'] as String?,
+      crc: map['crc'] as String?,
       rssi: map['rssi'] as int? ?? 0,
       count: map['count'] as int? ?? 0,
       frequency: map['frequency'] as int? ?? 0,
+      antennaId: map['antennaId'] as int? ?? 0,
       timestamp: map['timestamp'] as int? ?? 0,
     );
   }

@@ -80,25 +80,37 @@ class RfidHandler(
         }
 
         override fun onTag(cmd: Byte, state: Byte, data: DataParameter) {
-            if (state == ParamCts.FOUND_TAG || state == ParamCts.UPDATE_TAG) {
-                val epc = data.getString(ParamCts.TAG_EPC, "")
-                val pc = data.getString(ParamCts.TAG_PC, "")
-                val rssi = data.getInt(ParamCts.TAG_RSSI, 0)
-                val count = data.getInt(ParamCts.TAG_READ_COUNT, 1)
-                val freq = data.getInt(ParamCts.TAG_FREQ, 0)
-                val tid = data.getString(ParamCts.TAG_DATA, "")
-
-                sendTagEvent(mapOf(
-                    "type" to "tag",
-                    "epc" to epc,
-                    "pc" to pc,
-                    "tid" to tid,
-                    "rssi" to rssi,
-                    "count" to count,
-                    "frequency" to freq,
-                    "timestamp" to System.currentTimeMillis()
-                ))
+            val epcBytes = data.getByteArray(ParamCts.TAG_EPC)
+            if (epcBytes == null || epcBytes.isEmpty()) {
+                Log.d(TAG, "onTag: epcBytes is null or empty")
+                return
             }
+            val epc = epcBytes.joinToString("") { "%02X".format(it) }
+            val pcBytes = data.getByteArray(ParamCts.TAG_PC)
+            val pc = pcBytes?.joinToString("") { "%02X".format(it) } ?: ""
+            val rssi = data.getInt(ParamCts.TAG_RSSI, 0)
+            val count = data.getInt(ParamCts.TAG_READ_COUNT, 1)
+            val freq = data.getInt(ParamCts.TAG_FREQ, 0)
+            val tidBytes = data.getByteArray(ParamCts.TAG_DATA)
+            val tid = tidBytes?.joinToString("") { "%02X".format(it) } ?: ""
+            val crcBytes = data.getByteArray(ParamCts.TAG_CRC)
+            val crc = crcBytes?.joinToString("") { "%02X".format(it) } ?: ""
+            val antennaId = data.getByte(ParamCts.ANT_ID, 0.toByte())
+
+            Log.d(TAG, "onTag: EPC=$epc, RSSI=$rssi, Count=$count, Freq=$freq")
+
+            sendTagEvent(mapOf(
+                "type" to "tag",
+                "epc" to epc,
+                "pc" to pc,
+                "tid" to tid,
+                "crc" to crc,
+                "rssi" to rssi,
+                "count" to count,
+                "frequency" to freq,
+                "antennaId" to antennaId.toInt(),
+                "timestamp" to System.currentTimeMillis()
+            ))
         }
 
         override fun onFiled(cmd: Byte, errorCode: Byte, msg: String?) {
@@ -156,6 +168,7 @@ class RfidHandler(
         try {
             // If already connected, return immediately
             if (isConnected && rfidManager?.helper != null) {
+                Log.d(TAG, "Already connected, returning")
                 result.success(null)
                 return
             }
@@ -164,8 +177,23 @@ class RfidHandler(
             pendingConnectResult?.error("CONNECT_CANCELLED", "New connect request", null)
             pendingConnectResult = result
 
+            // Check system property first to see if RFID hardware is present
+            val rfidStatus = getSystemProperty("persist.sys.rfid.connect.status", "0")
+            Log.d(TAG, "RFID system property status: $rfidStatus")
+            if (rfidStatus != "1") {
+                Log.w(TAG, "RFID hardware not detected (system property)")
+                isConnected = false
+                sendConnectionEvent(false)
+                pendingConnectResult?.error("CONNECT_FAILED", "RFID device not connected", null)
+                pendingConnectResult = null
+                return
+            }
+
+            Log.d(TAG, "Connecting RFID...")
             rfidManager = RFIDManager.getInstance()
             rfidManager?.connect(context)
+            rfidManager?.setPrintLog(true)
+            Log.d(TAG, "RFIDManager.connect() called, waiting for service...")
 
             // Delay slightly to allow the AIDL service binding to complete
             mainHandler.postDelayed({
@@ -173,10 +201,17 @@ class RfidHandler(
                 val helper = rfidManager?.helper
                 if (helper is com.imin.rfid.ServicesHelper) {
                     if (helper.isServiceAvailable) {
-                        // Already connected
                         Log.d(TAG, "RFID service already available")
                         helper.registerReaderCall(readerCall)
+                        // 连接后先停止读取并清空，确保干净状态
+                        try {
+                            helper.tagInventoryRawStopReading()
+                            helper.extendOperation(CMD.CLEAR_TAG, "")
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Stop/clear on connect: ${e.message}")
+                        }
                         isConnected = true
+                        isReading = false
                         sendConnectionEvent(true)
                         pendingConnectResult?.success(null)
                         pendingConnectResult = null
@@ -186,7 +221,14 @@ class RfidHandler(
                                 Log.d(TAG, "RFID service connected")
                                 helper.removeServiceStatusListener(this)
                                 helper.registerReaderCall(readerCall)
+                                try {
+                                    helper.tagInventoryRawStopReading()
+                                    helper.extendOperation(CMD.CLEAR_TAG, "")
+                                } catch (e: Exception) {
+                                    Log.w(TAG, "Stop/clear on connect: ${e.message}")
+                                }
                                 isConnected = true
+                                isReading = false
                                 sendConnectionEvent(true)
                                 mainHandler.post {
                                     pendingConnectResult?.success(null)
@@ -243,7 +285,6 @@ class RfidHandler(
             val helper = rfidManager?.helper
             if (helper is com.imin.rfid.ServicesHelper) {
                 if (helper.isServiceAvailable) {
-                    // Service is ready, register callback directly
                     Log.d(TAG, "RFID service available (polled)")
                     helper.registerReaderCall(readerCall)
                     isConnected = true
@@ -551,8 +592,28 @@ class RfidHandler(
     }
 
     private fun getBatteryLevel(result: MethodChannel.Result) {
-        // Battery info comes via broadcast, return 0 as default
-        result.success(0)
+        // Read battery from system property (same as IMinApiTest)
+        val battery = getSystemProperty("persist.sys.rfid.battery", "")
+        val level = when {
+            battery.contains("+") -> -1 // charging
+            battery == "100" -> 100
+            battery == "75" -> 75
+            battery == "50" -> 50
+            battery == "25" -> 25
+            else -> 0
+        }
+        result.success(level)
+    }
+
+    private fun getSystemProperty(key: String, defaultValue: String): String {
+        return try {
+            val c = Class.forName("android.os.SystemProperties")
+            val get = c.getMethod("get", String::class.java, String::class.java)
+            get.invoke(c, key, defaultValue) as String
+        } catch (e: Exception) {
+            Log.w(TAG, "Error reading system property: $key", e)
+            defaultValue
+        }
     }
 
     // ==================== Broadcast Receiver ====================
@@ -562,6 +623,38 @@ class RfidHandler(
             broadcastReceiver = object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     when (intent.action) {
+                        "com.common.rfid.connect.status" -> {
+                            val connected = intent.getBooleanExtra("status", false)
+                            Log.d(TAG, "RFID connect broadcast: connected=$connected")
+                            if (connected) {
+                                // RFID hardware connected, auto-connect
+                                if (!isConnected) {
+                                    mainHandler.postDelayed({
+                                        try {
+                                            rfidManager = RFIDManager.getInstance()
+                                            rfidManager?.connect(context)
+                                            rfidManager?.setPrintLog(true)
+                                            mainHandler.postDelayed({
+                                                val helper = rfidManager?.helper
+                                                if (helper is com.imin.rfid.ServicesHelper && helper.isServiceAvailable) {
+                                                    helper.registerReaderCall(readerCall)
+                                                    isConnected = true
+                                                    sendConnectionEvent(true)
+                                                    Log.d(TAG, "RFID auto-connected via broadcast")
+                                                }
+                                            }, 2000)
+                                        } catch (e: Exception) {
+                                            Log.e(TAG, "Auto-connect failed", e)
+                                        }
+                                    }, 500)
+                                }
+                            } else {
+                                Log.w(TAG, "RFID connection lost (broadcast)")
+                                isConnected = false
+                                isReading = false
+                                sendConnectionEvent(false)
+                            }
+                        }
                         ParamCts.BROADCAST_ON_LOST_CONNECT -> {
                             Log.w(TAG, "RFID connection lost")
                             isConnected = false
@@ -585,6 +678,7 @@ class RfidHandler(
             }
 
             val filter = IntentFilter().apply {
+                addAction("com.common.rfid.connect.status")
                 addAction(ParamCts.BROADCAST_ON_LOST_CONNECT)
                 addAction(ParamCts.BROADCAST_UN_FOUND_READER)
                 addAction(ParamCts.BROADCAST_BATTER_LOW_ELEC)

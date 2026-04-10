@@ -32,8 +32,15 @@ class _RfidPageState extends State<RfidPage> {
   void initState() {
     super.initState();
     _listenToStreams();
-    // Auto-connect on page open, with a short delay for the service to bind
-    Future.delayed(const Duration(milliseconds: 500), _connect);
+    // 自动尝试连接，延迟等待服务绑定
+    Future.delayed(const Duration(milliseconds: 500), () async {
+      try {
+        await IminRfid.connect();
+        // 等连接回调通过 connectionStream 更新状态
+      } catch (_) {
+        // 连接失败，状态保持未连接
+      }
+    });
   }
 
   @override
@@ -45,7 +52,7 @@ class _RfidPageState extends State<RfidPage> {
     _dataController.dispose();
     _passwordController.dispose();
     // Stop reading and disconnect when leaving the page
-    if (_isReading) IminRfid.stopReading().catchError((_) {});
+    IminRfid.stopReading().catchError((_) {});
     IminRfid.disconnect().catchError((_) {});
     super.dispose();
   }
@@ -95,7 +102,18 @@ class _RfidPageState extends State<RfidPage> {
 
     // 连接状态流
     _connectionSubscription = IminRfid.connectionStream.listen((connected) {
-      setState(() => _isConnected = connected);
+      setState(() {
+        _isConnected = connected;
+        if (!connected) {
+          _isReading = false;
+          _tags.clear();
+          _tagMap.clear();
+          _tagCount = 0;
+          _totalReadCount = 0;
+          _batteryLevel = 0;
+          _isCharging = false;
+        }
+      });
       if (connected) {
         _showSuccess(_t('RFID device connected', 'RFID 设备已连接'));
         _checkConnection();
@@ -235,7 +253,7 @@ class _RfidPageState extends State<RfidPage> {
                       fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
-                _buildBatteryIndicator(),
+                if (_isConnected) _buildBatteryIndicator(),
               ],
             ),
             if (_isConnected) ...[
@@ -244,11 +262,6 @@ class _RfidPageState extends State<RfidPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildStatusItem(_t('Battery', '电量'), '$_batteryLevel%'),
-                  _buildStatusItem(
-                      _t('Status', '状态'),
-                      _isCharging
-                          ? _t('Charging', '充电中')
-                          : _t('Not Charging', '未充电')),
                   _buildStatusItem(
                       _t('Reading', '读取'),
                       _isReading
@@ -444,8 +457,13 @@ class _RfidPageState extends State<RfidPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (tag.pc != null) _buildInfoRow('PC', tag.pc!),
-                if (tag.tid != null) _buildInfoRow('TID', tag.tid!),
-                _buildInfoRow(_t('Frequency', '频率'), '${tag.frequency} kHz'),
+                if (tag.tid != null && tag.tid!.isNotEmpty)
+                  _buildInfoRow('TID', tag.tid!),
+                if (tag.crc != null && tag.crc!.isNotEmpty)
+                  _buildInfoRow('CRC', tag.crc!),
+                _buildInfoRow(_t('Frequency', '频率'),
+                    '${(tag.frequency / 1000).toStringAsFixed(3)} MHz'),
+                _buildInfoRow(_t('Antenna', '天线'), '${tag.antennaId}'),
                 _buildInfoRow(
                     _t('Time', '时间'), _formatTimestamp(tag.timestamp)),
                 const Divider(height: 24),
