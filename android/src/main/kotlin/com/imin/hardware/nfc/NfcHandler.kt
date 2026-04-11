@@ -186,10 +186,12 @@ class NfcHandler(
                 
                 if (nfcId.isNotEmpty()) {
                     val tag = getTagFromIntent(intent)
+                    val techList = tag?.techList ?: emptyArray()
                     val nfcData = mapOf(
                         "id" to nfcId,
                         "content" to content,
-                        "technology" to (tag?.techList?.joinToString(", ") ?: ""),
+                        "technology" to techList.joinToString(", "),
+                        "tagType" to getTagType(techList),
                         "timestamp" to System.currentTimeMillis()
                     )
                     
@@ -212,6 +214,19 @@ class NfcHandler(
             return ""
         }
         return byteArrayToHexString(tag.id)
+    }
+
+    private fun getTagType(techList: Array<String>): String {
+        for (tech in techList) {
+            if (tech.contains("NfcA")) return "ISO 14443-3A"
+            if (tech.contains("NfcB")) return "ISO 14443-3B"
+            if (tech.contains("NfcF")) return "JIS 6319-4 (FeliCa)"
+            if (tech.contains("NfcV")) return "ISO 15693"
+            if (tech.contains("IsoDep")) return "ISO 14443-4"
+            if (tech.contains("MifareClassic")) return "MIFARE Classic"
+            if (tech.contains("MifareUltralight")) return "MIFARE Ultralight"
+        }
+        return ""
     }
 
     /**

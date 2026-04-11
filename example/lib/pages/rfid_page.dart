@@ -66,8 +66,8 @@ class _RfidPageState extends State<RfidPage> {
         final level = await IminRfid.getBatteryLevel();
         final charging = await IminRfid.isCharging();
         setState(() {
-          _batteryLevel = level;
-          _isCharging = charging;
+          _batteryLevel = level == -1 ? 0 : level;
+          _isCharging = charging || level == -1;
         });
       }
     } catch (e) {
@@ -261,7 +261,8 @@ class _RfidPageState extends State<RfidPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatusItem(_t('Battery', '电量'), '$_batteryLevel%'),
+                  _buildStatusItem(_t('Battery', '电量'),
+                      _isCharging ? _t('Charging', '充电中') : '$_batteryLevel%'),
                   _buildStatusItem(
                       _t('Reading', '读取'),
                       _isReading
