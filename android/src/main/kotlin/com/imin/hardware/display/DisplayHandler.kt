@@ -111,12 +111,15 @@ class DisplayHandler(private val activity: Activity) {
 
             Log.d(TAG, "Received asset path from Flutter: $assetPath")
             
-            // 直接使用 Flutter asset 路径，格式: flutter_assets/assets/images/xxx.png
-            val flutterAssetPath = "flutter_assets/$assetPath"
+            val finalPath = if (assetPath.startsWith("http://") || assetPath.startsWith("https://")) {
+                assetPath
+            } else {
+                "flutter_assets/$assetPath"
+            }
             
-            Log.d(TAG, "Converted to Android asset path: $flutterAssetPath")
+            Log.d(TAG, "Final image path: $finalPath")
             
-            presentation?.showImage(activity, flutterAssetPath)
+            presentation?.showImage(activity, finalPath)
             result.success(null)
         } catch (e: Exception) {
             Log.e(TAG, "Error showing image", e)
@@ -139,12 +142,15 @@ class DisplayHandler(private val activity: Activity) {
 
             Log.d(TAG, "Received video path from Flutter: $assetPath")
             
-            // 直接使用 Flutter asset 路径，格式: flutter_assets/assets/videos/xxx.mp4
-            val flutterAssetPath = "flutter_assets/$assetPath"
+            val finalPath = if (assetPath.startsWith("http://") || assetPath.startsWith("https://")) {
+                assetPath
+            } else {
+                "flutter_assets/$assetPath"
+            }
             
-            Log.d(TAG, "Converted to Android asset path: $flutterAssetPath")
+            Log.d(TAG, "Final video path: $finalPath")
 
-            presentation?.playVideo(activity, flutterAssetPath)
+            presentation?.playVideo(activity, finalPath)
             result.success(null)
         } catch (e: Exception) {
             Log.e(TAG, "Error playing video", e)
