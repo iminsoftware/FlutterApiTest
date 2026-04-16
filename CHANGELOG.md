@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.5 - 2026-04-16
+
+### Added
+- 🌐 副屏显示支持网络图片和网络视频
+- ✅ `showImage` 和 `playVideo` 接口兼容本地 asset 路径和 http/https 网络 URL
+- ✅ Demo 页面新增图片和视频 URL 输入框，方便测试网络资源
+
+### Fixed
+- 🐛 修复 `DisplayHandler` 对网络 URL 错误添加 `flutter_assets/` 前缀的问题
+
+### Technical Details
+- `DisplayHandler.kt` 增加路径类型判断，网络地址直接透传，本地路径添加 asset 前缀
+- `DifferentDisplay.kt` 使用 Glide 加载网络图片，VideoView 直接播放网络视频
+- Demo 页面 `display_page.dart` 新增 `_imageUrlController` 和 `_videoUrlController`
+
+---
+
 ## 1.0.4 - 2026-02-26
 
 ### Changed
