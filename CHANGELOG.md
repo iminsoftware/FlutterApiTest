@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.0.6 - 2026-04-22
+
+### Added
+- 📸 摄像头多码同扫 / 多角度识别功能
+- ✅ `CameraScanApi.scanMulti()` — 多条码同时识别，支持任意角度
+- ✅ `CameraScanApi.isMLKitAvailable()` — 检测 ML Kit 运行时可用性
+- ✅ `MultiScanOptions` — 完整的多码扫描配置（引擎/格式/区域/超时等）
+- ✅ `DecodeEngine` — 解码引擎常量（ZXing / ML Kit）
+- ✅ `FlutterMultiCaptureActivity` — 多码扫描 Activity
+- ✅ ML Kit barcode-scanning 17.0.0 依赖
+- ✅ Example app 新增独立的多码同扫测试页面
+
+### Changed
+- 🔧 `ScanUtils.java` 升级为双引擎架构（ZXing + ML Kit），支持多角度旋转解码
+- 🔧 `MultiFormatAnalyzer.java` 优化 setHints 调用频率
+- 🔧 新增 `MLKitDecoder.java` ML Kit 异步解码器
+
+### Technical Details
+- ML Kit 不可用时自动降级为 ZXing（运行时 Class.forName 检测）
+- ZXing 引擎通过 90°/180°/270° 旋转实现多角度识别
+- ML Kit 引擎原生支持任意角度和多条码
+- 扫码结果去重机制（2秒内相同内容不重复触发）
+
+---
+
 ## 1.0.5 - 2026-04-16
 
 ### Added

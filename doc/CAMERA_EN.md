@@ -2,9 +2,11 @@
 
 Camera-based barcode and QR code scanning for iMin POS devices.
 
-## Installation
+Supports two scan engines:
+- **ZXing** (default) — local decoding, best compatibility
+- **ML Kit** (optional) — any-angle recognition, multi-barcode, faster
 
-Add to your `pubspec.yaml`:
+## Installation
 
 ```yaml
 dependencies:
@@ -12,184 +14,127 @@ dependencies:
   permission_handler: ^11.0.0  # For camera permission
 ```
 
-Then run:
-
-```bash
-flutter pub get
-```
-
 ## Import
 
 ```dart
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-import 'package:permission_handler/permission_handler.dart';
 ```
-
-The plugin exports `CameraScanApi` class for camera-based scanning.
-
-## Features
-
-- Quick scan with default settings
-- QR code only scanning
-- Barcode only scanning
-- All formats scanning
-- Flash control
-- Timeout configuration
-- Custom format selection
 
 ## API Reference
 
-### Quick Scan
+### Single Scan
 
 ```dart
+// Quick scan (default formats: QR_CODE, UPC_A, EAN_13, CODE_128)
 String code = await CameraScanApi.scanQuick();
-```
 
-### Scan QR Code Only
-
-```dart
+// QR code only
 String code = await CameraScanApi.scanQRCode();
-```
 
-### Scan Barcode Only
-
-```dart
+// Barcode only (all 1D formats)
 String code = await CameraScanApi.scanBarcode();
-```
 
-### Scan All Formats
+// All formats with full result
+Map<String, dynamic> result = await CameraScanApi.scanAll();
+// result = {'code': '...', 'format': 'QR_CODE'}
 
-```dart
-Map<String, String> result = await CameraScanApi.scanAll();
-// Returns: {code: String, format: String}
-```
-
-### Custom Scan
-
-```dart
-Map<String, String> result = await CameraScanApi.scan(
-  formats: [BarcodeFormat.qrCode, BarcodeFormat.code128],
+// Custom scan
+Map<String, dynamic> result = await CameraScanApi.scan(
+  formats: ['QR_CODE', 'CODE_128'],
   useFlash: true,
-  timeout: 10000,  // 10 seconds
-  prompt: 'Scan your code',
+  beepEnabled: true,
+  timeout: 10000,  // 10 seconds, 0 = no timeout
 );
 ```
 
-### Barcode Formats
+### Multi Scan (ML Kit)
+
+Supports multi-barcode and any-angle recognition. Falls back to ZXing automatically if ML Kit is unavailable.
 
 ```dart
-enum BarcodeFormat {
-  qrCode,
-  code128,
-  code39,
-  code93,
-  ean8,
-  ean13,
-  upcA,
-  upcE,
-  dataMatrix,
-  pdf417,
-  aztec,
-  // ... more formats
-}
+// Default multi scan
+List<Map<String, dynamic>> results = await CameraScanApi.scanMulti();
+
+// Multi-angle only (single barcode, any orientation)
+final results = await CameraScanApi.scanMulti(const MultiScanOptions(
+  supportMultiAngle: true,
+  supportMultiBarcode: false,
+  fullAreaScan: true,
+));
+
+// Full configuration
+final results = await CameraScanApi.scanMulti(const MultiScanOptions(
+  formats: ['QR_CODE', 'EAN_13', 'CODE_128'],
+  supportMultiBarcode: true,
+  supportMultiAngle: true,
+  decodeEngine: DecodeEngine.mlkit,
+  fullAreaScan: true,
+  areaRectRatio: 0.9,
+  useFlash: false,
+  beepEnabled: true,
+  timeout: 30000,
+));
 ```
+
+### ML Kit Detection
+
+```dart
+bool available = await CameraScanApi.isMLKitAvailable();
+```
+
+### MultiScanOptions
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| formats | List\<String\>? | all | Barcode formats to scan |
+| useFlash | bool | false | Enable flashlight |
+| beepEnabled | bool | true | Play beep on success |
+| timeout | int | 0 | Timeout in ms (0 = none) |
+| supportMultiBarcode | bool | true | Scan multiple barcodes |
+| supportMultiAngle | bool | true | Any-angle recognition |
+| decodeEngine | int | 1 (MLKit) | 0=ZXing, 1=MLKit |
+| fullAreaScan | bool | true | Full area scanning |
+| areaRectRatio | double | 0.8 | Scan area ratio (0.5~1.0) |
+
+### Supported Formats
+
+**1D (12):** CODABAR, CODE_39, CODE_93, CODE_128, EAN_8, EAN_13, ITF, RSS_14, RSS_EXPANDED, UPC_A, UPC_E, UPC_EAN_EXTENSION
+
+**2D (5):** QR_CODE, DATA_MATRIX, PDF_417, AZTEC, MAXICODE
 
 ## Example
 
 ```dart
-import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-class CameraExample extends StatefulWidget {
-  @override
-  _CameraExampleState createState() => _CameraExampleState();
-}
-
-class _CameraExampleState extends State<CameraExample> {
-  String _lastResult = '';
-  String _lastFormat = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _requestPermission();
-  }
-
-  Future<void> _requestPermission() async {
+class ScanExample extends StatelessWidget {
+  Future<void> _scan() async {
+    // Request camera permission first
     await Permission.camera.request();
-  }
 
-  Future<void> _scanQuick() async {
+    // Single scan
     try {
-      final code = await CameraScanApi.scanQuick();
-      setState(() {
-        _lastResult = code;
-        _lastFormat = 'DEFAULT';
-      });
+      final result = await CameraScanApi.scanAll();
+      print('${result['format']}: ${result['code']}');
     } catch (e) {
-      print('Scan error: $e');
+      print('Scan canceled or failed: $e');
     }
-  }
 
-  Future<void> _scanQRCode() async {
+    // Multi scan
     try {
-      final code = await CameraScanApi.scanQRCode();
-      setState(() {
-        _lastResult = code;
-        _lastFormat = 'QR_CODE';
-      });
+      final results = await CameraScanApi.scanMulti();
+      for (final r in results) {
+        print('${r['format']}: ${r['code']}');
+      }
     } catch (e) {
-      print('Scan error: $e');
+      print('Multi scan failed: $e');
     }
-  }
-
-  Future<void> _scanWithFlash() async {
-    try {
-      final result = await CameraScanApi.scan(
-        useFlash: true,
-        prompt: 'Scan with flash',
-      );
-      setState(() {
-        _lastResult = result['code']!;
-        _lastFormat = result['format']!;
-      });
-    } catch (e) {
-      print('Scan error: $e');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text('Last Result: $_lastResult'),
-        Text('Format: $_lastFormat'),
-        ElevatedButton(
-          onPressed: _scanQuick,
-          child: Text('Quick Scan'),
-        ),
-        ElevatedButton(
-          onPressed: _scanQRCode,
-          child: Text('Scan QR Code'),
-        ),
-        ElevatedButton(
-          onPressed: _scanWithFlash,
-          child: Text('Scan with Flash'),
-        ),
-      ],
-    );
   }
 }
 ```
 
 ## Notes
 
-- Camera permission required
+- Camera permission required (`permission_handler` recommended)
 - Scanning opens a full-screen camera view
-- User can cancel scan by pressing back
-- Timeout causes scan to fail if no code detected
-- Flash may not be available on all devices
-
-## Supported Devices
-
-All iMin POS devices with camera
+- User can cancel by pressing back
+- ML Kit requires Google Play Services; auto-fallback to ZXing on devices without GMS
+- All iMin POS devices with camera are supported
