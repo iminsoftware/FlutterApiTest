@@ -34,6 +34,8 @@ public class MultiFormatAnalyzer extends AreaRectAnalyzer {
 
     private void initReader(){
         mReader = new MultiFormatReader();
+        // setHints只在初始化时调用一次，避免每帧重建所有Reader对象
+        mReader.setHints(mHints);
     }
 
     @Nullable
@@ -42,7 +44,6 @@ public class MultiFormatAnalyzer extends AreaRectAnalyzer {
         Result rawResult = null;
         try {
             long start = System.currentTimeMillis();
-            mReader.setHints(mHints);
             PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(data,dataWidth,dataHeight,left,top,width,height,false);
             rawResult = decodeInternal(source,isMultiDecode);
 

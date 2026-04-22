@@ -9,7 +9,6 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 
-
 import com.imin.hardware.R;
 import com.imin.scan.util.LogUtils;
 

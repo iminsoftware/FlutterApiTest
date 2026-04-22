@@ -121,6 +121,27 @@ class AppLocalizations {
       locale.languageCode == 'zh' ? '暂无扫码历史' : 'No scan history';
   String get clear => locale.languageCode == 'zh' ? '清空' : 'Clear';
   String get scanned => locale.languageCode == 'zh' ? '已扫描' : 'Scanned';
+  // 多码扫描
+  String get multiScan => locale.languageCode == 'zh' ? '多码同扫' : 'Multi Scan';
+  String get multiScanDesc => locale.languageCode == 'zh'
+      ? '多条码/多角度摄像头扫描'
+      : 'Multi-barcode/multi-angle camera scanning';
+  String get multiScanDefault =>
+      locale.languageCode == 'zh' ? '多码同扫（默认）' : 'Multi Scan (Default)';
+  String get multiAngleScan =>
+      locale.languageCode == 'zh' ? '多角度扫码' : 'Multi Angle Scan';
+  String get customMultiScan =>
+      locale.languageCode == 'zh' ? '自定义多码扫描' : 'Custom Multi Scan';
+  String get multiScanResults =>
+      locale.languageCode == 'zh' ? '多码扫描结果' : 'Multi Scan Results';
+  String get multiScanRefresh => locale.languageCode == 'zh' ? '刷新' : 'Refresh';
+  String get multiScanOriginalApi =>
+      locale.languageCode == 'zh' ? '原有接口 (scan)' : 'Original API (scan)';
+  String get multiScanNewApi =>
+      locale.languageCode == 'zh' ? '新接口 (scanMulti)' : 'New API (scanMulti)';
+  String get multiScanScanning =>
+      locale.languageCode == 'zh' ? '扫描中...' : 'Scanning...';
+
   String get cameraPermissionRequired => locale.languageCode == 'zh'
       ? '需要相机权限才能扫码'
       : 'Camera permission is required for scanning';

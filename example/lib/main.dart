@@ -13,6 +13,7 @@ import 'pages/serial_page.dart';
 import 'pages/rfid_page.dart';
 import 'pages/segment_page.dart';
 import 'pages/camera_scan_page.dart';
+import 'pages/multi_scan_page.dart';
 import 'pages/floating_window_page.dart';
 import 'utils/permission_helper.dart';
 import 'package:imin_hardware_plugin/imin_hardware_plugin.dart';
@@ -288,6 +289,17 @@ class _HomePageState extends State<HomePage> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const CameraScanPage()),
+            ),
+          ),
+
+          _buildFeatureButton(
+            context,
+            icon: Icons.qr_code_scanner,
+            title: l10n.multiScan,
+            subtitle: l10n.multiScanDesc,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MultiScanPage()),
             ),
           ),
 

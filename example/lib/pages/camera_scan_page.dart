@@ -45,28 +45,21 @@ class _CameraScanPageState extends State<CameraScanPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Last Scan Result Card
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.lastScanResult,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                    Text(l10n.lastScanResult,
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 8),
                     if (_lastResult.isNotEmpty) ...[
                       Text('${l10n.format}: $_lastFormat'),
                       const SizedBox(height: 4),
-                      Text(
-                        '${l10n.code}: $_lastResult',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                      Text('${l10n.code}: $_lastResult',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
                     ] else
                       Text(l10n.noScanResult),
                   ],
@@ -74,38 +67,26 @@ class _CameraScanPageState extends State<CameraScanPage> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Single scan button
             SizedBox(
               height: 56,
               child: ElevatedButton.icon(
                 onPressed: _isScanning ? null : _scanAll,
                 icon: const Icon(Icons.document_scanner, size: 28),
-                label: Text(
-                  l10n.scanAllFormats,
-                  style: const TextStyle(fontSize: 18),
-                ),
+                label: Text(l10n.scanAllFormats,
+                    style: const TextStyle(fontSize: 18)),
               ),
             ),
             const SizedBox(height: 24),
-
-            // Scan History
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${l10n.scanHistory} (${_scanHistory.length})',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text('${l10n.scanHistory} (${_scanHistory.length})',
+                    style: Theme.of(context).textTheme.titleMedium),
                 if (_scanHistory.isNotEmpty)
-                  TextButton(
-                    onPressed: _clearHistory,
-                    child: Text(l10n.clear),
-                  ),
+                  TextButton(onPressed: _clearHistory, child: Text(l10n.clear)),
               ],
             ),
             const SizedBox(height: 8),
-
             if (_scanHistory.isEmpty)
               Card(
                 child: Padding(
@@ -116,11 +97,9 @@ class _CameraScanPageState extends State<CameraScanPage> {
             else
               ..._scanHistory.reversed.map((scan) => Card(
                     child: ListTile(
-                      leading: Icon(
-                        scan['format'] == 'QR_CODE'
-                            ? Icons.qr_code
-                            : Icons.barcode_reader,
-                      ),
+                      leading: Icon(scan['format'] == 'QR_CODE'
+                          ? Icons.qr_code
+                          : Icons.barcode_reader),
                       title: Text(scan['code']!),
                       subtitle: Text(scan['format']!),
                       trailing: Text(scan['time']!),
@@ -146,7 +125,6 @@ class _CameraScanPageState extends State<CameraScanPage> {
 
   void _handleScanResult(String code, String format) {
     final l10n = AppLocalizations.of(context);
-
     setState(() {
       _lastResult = code;
       _lastFormat = format;
@@ -156,27 +134,20 @@ class _CameraScanPageState extends State<CameraScanPage> {
         'time': TimeOfDay.now().format(context),
       });
     });
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${l10n.scanned}: $code'),
-        backgroundColor: Colors.green,
-      ),
+          content: Text('${l10n.scanned}: $code'),
+          backgroundColor: Colors.green),
     );
   }
 
   void _showError(String error) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(error),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(error), backgroundColor: Colors.red),
     );
   }
 
   void _clearHistory() {
-    setState(() {
-      _scanHistory.clear();
-    });
+    setState(() => _scanHistory.clear());
   }
 }

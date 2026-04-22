@@ -31,5 +31,12 @@
             android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
             android:exported="false" />
+        
+        <!-- Multi Scan Activity (多码同扫/多角度识别) -->
+        <activity
+            android:name=".camera.FlutterMultiCaptureActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:exported="false" />
     </application>
 </manifest>
