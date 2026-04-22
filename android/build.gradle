@@ -70,5 +70,8 @@ android {
         api "androidx.camera:camera-view:${camerax_version}"
         api "androidx.camera:camera-lifecycle:${camerax_version}"
         api "androidx.camera:camera-camera2:${camerax_version}"
+        
+        // ML Kit Barcode Scanning (可选，不引入则自动降级 ZXing)
+        implementation 'com.google.mlkit:barcode-scanning:17.0.0'
     }
 }
